@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 860" width="1000" height="860" role="img" aria-labelledby="title desc">
+  <title id="title">Grievance AI System Architecture</title>
+  <desc id="desc">Clean five-layer architecture: users, Next.js portal, FastAPI services, AI pipeline, and data stores. One portal, three roles.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#000000"/>
+    </marker>
+    <style>
+      .paper { fill: #ffffff; }
+      .ink { fill: #000000; }
+      .frame { fill: #ffffff; stroke: #000000; stroke-width: 2; }
+      .hdr { fill: #000000; }
+      .box { fill: #ffffff; stroke: #000000; stroke-width: 1.5; }
+      .t { font-family: Arial, Helvetica, sans-serif; fill: #000000; }
+      .tw { font-family: Arial, Helvetica, sans-serif; fill: #ffffff; }
+      .line { stroke: #000000; stroke-width: 1.4; fill: none; }
+    </style>
+  </defs>
+
+  <rect class="paper" width="1000" height="860"/>
+
+  <text class="t" x="500" y="34" text-anchor="middle" font-size="20" font-weight="bold">GRIEVANCE AI</text>
+  <text class="t" x="500" y="54" text-anchor="middle" font-size="12">System Architecture — One web portal, three roles</text>
+
+  <!-- 1 USERS -->
+  <rect class="frame" x="40" y="72" width="920" height="92"/>
+  <rect class="hdr" x="40" y="72" width="920" height="26"/>
+  <circle cx="58" cy="85" r="9" fill="#ffffff"/>
+  <text class="t" x="58" y="89" text-anchor="middle" font-size="11" font-weight="bold">1</text>
+  <text class="tw" x="76" y="90" font-size="12" font-weight="bold">USERS</text>
+  <text class="tw" x="944" y="90" text-anchor="end" font-size="10">one account, one role</text>
+
+  <rect class="box" x="64" y="110" width="280" height="40"/>
+  <text class="t" x="204" y="135" text-anchor="middle" font-size="14" font-weight="bold">Citizen</text>
+  <rect class="box" x="360" y="110" width="280" height="40"/>
+  <text class="t" x="500" y="135" text-anchor="middle" font-size="14" font-weight="bold">Officer</text>
+  <rect class="box" x="656" y="110" width="280" height="40"/>
+  <text class="t" x="796" y="135" text-anchor="middle" font-size="14" font-weight="bold">Admin</text>
+
+  <line class="line" x1="500" y1="164" x2="500" y2="188" marker-end="url(#arrow)"/>
+  <text class="t" x="512" y="182" font-size="10">login</text>
+
+  <!-- 2 PORTAL -->
+  <rect class="frame" x="40" y="192" width="920" height="108"/>
+  <rect class="hdr" x="40" y="192" width="920" height="26"/>
+  <circle cx="58" cy="205" r="9" fill="#ffffff"/>
+  <text class="t" x="58" y="209" text-anchor="middle" font-size="11" font-weight="bold">2</text>
+  <text class="tw" x="76" y="210" font-size="12" font-weight="bold">WEB PORTAL</text>
+  <text class="tw" x="944" y="210" text-anchor="end" font-size="10">Next.js 14</text>
+
+  <rect class="box" x="64" y="230" width="280" height="54"/>
+  <text class="t" x="204" y="252" text-anchor="middle" font-size="13" font-weight="bold">Citizen views</text>
+  <text class="t" x="204" y="270" text-anchor="middle" font-size="11">Submit, track, feedback</text>
+
+  <rect class="box" x="360" y="230" width="280" height="54"/>
+  <text class="t" x="500" y="252" text-anchor="middle" font-size="13" font-weight="bold">Officer views</text>
+  <text class="t" x="500" y="270" text-anchor="middle" font-size="11">Queue, status, proof</text>
+
+  <rect class="box" x="656" y="230" width="280" height="54"/>
+  <text class="t" x="796" y="252" text-anchor="middle" font-size="13" font-weight="bold">Admin views</text>
+  <text class="t" x="796" y="270" text-anchor="middle" font-size="11">Users, depts, analytics</text>
+
+  <line class="line" x1="500" y1="300" x2="500" y2="324" marker-end="url(#arrow)"/>
+  <text class="t" x="512" y="318" font-size="10">HTTPS / REST + JWT</text>
+
+  <!-- 3 API -->
+  <rect class="frame" x="40" y="328" width="920" height="108"/>
+  <rect class="hdr" x="40" y="328" width="920" height="26"/>
+  <circle cx="58" cy="341" r="9" fill="#ffffff"/>
+  <text class="t" x="58" y="345" text-anchor="middle" font-size="11" font-weight="bold">3</text>
+  <text class="tw" x="76" y="346" font-size="12" font-weight="bold">API AND SERVICES</text>
+  <text class="tw" x="944" y="346" text-anchor="end" font-size="10">FastAPI · JWT · RBAC</text>
+
+  <rect class="box" x="64" y="366" width="214" height="54"/>
+  <text class="t" x="171" y="388" text-anchor="middle" font-size="13" font-weight="bold">Auth</text>
+  <text class="t" x="171" y="406" text-anchor="middle" font-size="11">Login, tokens, roles</text>
+
+  <rect class="box" x="290" y="366" width="214" height="54"/>
+  <text class="t" x="397" y="388" text-anchor="middle" font-size="13" font-weight="bold">Complaints</text>
+  <text class="t" x="397" y="406" text-anchor="middle" font-size="11">Create, status, assign</text>
+
+  <rect class="box" x="516" y="366" width="214" height="54"/>
+  <text class="t" x="623" y="388" text-anchor="middle" font-size="13" font-weight="bold">Analytics</text>
+  <text class="t" x="623" y="406" text-anchor="middle" font-size="11">Trends, heatmap</text>
+
+  <rect class="box" x="742" y="366" width="196" height="54"/>
+  <text class="t" x="840" y="388" text-anchor="middle" font-size="13" font-weight="bold">Notifications</text>
+  <text class="t" x="840" y="406" text-anchor="middle" font-size="11">Inbox alerts</text>
+
+  <line class="line" x1="500" y1="436" x2="500" y2="460" marker-end="url(#arrow)"/>
+  <text class="t" x="512" y="454" font-size="10">on new complaint</text>
+
+  <!-- 4 AI -->
+  <rect class="frame" x="40" y="464" width="920" height="108"/>
+  <rect class="hdr" x="40" y="464" width="920" height="26"/>
+  <circle cx="58" cy="477" r="9" fill="#ffffff"/>
+  <text class="t" x="58" y="481" text-anchor="middle" font-size="11" font-weight="bold">4</text>
+  <text class="tw" x="76" y="482" font-size="12" font-weight="bold">AI PIPELINE</text>
+  <text class="tw" x="944" y="482" text-anchor="end" font-size="10">server-side, automatic</text>
+
+  <rect class="box" x="56" y="502" width="160" height="54"/>
+  <text class="t" x="136" y="524" text-anchor="middle" font-size="12" font-weight="bold">1. Summarize</text>
+  <text class="t" x="136" y="542" text-anchor="middle" font-size="10">Gemini / OpenAI</text>
+
+  <line class="line" x1="216" y1="529" x2="234" y2="529" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="236" y="502" width="160" height="54"/>
+  <text class="t" x="316" y="524" text-anchor="middle" font-size="12" font-weight="bold">2. Classify</text>
+  <text class="t" x="316" y="542" text-anchor="middle" font-size="10">MiniLM ? department</text>
+
+  <line class="line" x1="396" y1="529" x2="414" y2="529" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="416" y="502" width="160" height="54"/>
+  <text class="t" x="496" y="524" text-anchor="middle" font-size="12" font-weight="bold">3. Deduplicate</text>
+  <text class="t" x="496" y="542" text-anchor="middle" font-size="10">500 m + cosine 0.85</text>
+
+  <line class="line" x1="576" y1="529" x2="594" y2="529" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="596" y="502" width="160" height="54"/>
+  <text class="t" x="676" y="524" text-anchor="middle" font-size="12" font-weight="bold">4. Prioritize</text>
+  <text class="t" x="676" y="542" text-anchor="middle" font-size="10">Low ? Critical</text>
+
+  <line class="line" x1="756" y1="529" x2="774" y2="529" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="776" y="502" width="162" height="54"/>
+  <text class="t" x="857" y="524" text-anchor="middle" font-size="12" font-weight="bold">5. Assign</text>
+  <text class="t" x="857" y="542" text-anchor="middle" font-size="10">Officer in department</text>
+
+  <line class="line" x1="500" y1="572" x2="500" y2="596" marker-end="url(#arrow)"/>
+  <text class="t" x="512" y="590" font-size="10">persist</text>
+
+  <!-- 5 DATA -->
+  <rect class="frame" x="40" y="600" width="920" height="108"/>
+  <rect class="hdr" x="40" y="600" width="920" height="26"/>
+  <circle cx="58" cy="613" r="9" fill="#ffffff"/>
+  <text class="t" x="58" y="617" text-anchor="middle" font-size="11" font-weight="bold">5</text>
+  <text class="tw" x="76" y="618" font-size="12" font-weight="bold">DATA AND SERVICES</text>
+  <text class="tw" x="944" y="618" text-anchor="end" font-size="10">stores and APIs</text>
+
+  <rect class="box" x="64" y="638" width="280" height="54"/>
+  <text class="t" x="204" y="660" text-anchor="middle" font-size="13" font-weight="bold">MongoDB</text>
+  <text class="t" x="204" y="678" text-anchor="middle" font-size="11">Users, complaints, GeoJSON</text>
+
+  <rect class="box" x="360" y="638" width="280" height="54"/>
+  <text class="t" x="500" y="660" text-anchor="middle" font-size="13" font-weight="bold">Cloudinary</text>
+  <text class="t" x="500" y="678" text-anchor="middle" font-size="11">Photos and proof images</text>
+
+  <rect class="box" x="656" y="638" width="280" height="54"/>
+  <text class="t" x="796" y="660" text-anchor="middle" font-size="13" font-weight="bold">Gemini / OpenAI</text>
+  <text class="t" x="796" y="678" text-anchor="middle" font-size="11">Complaint summarization</text>
+
+  <text class="t" x="500" y="736" text-anchor="middle" font-size="11">Departments: Public Works · Sanitation · Water · Electricity · Traffic · Parks</text>
+  <text class="t" x="500" y="758" text-anchor="middle" font-size="11">Figure 1. Layered architecture of Grievance AI.</text>
+  <text class="t" x="500" y="776" text-anchor="middle" font-size="10">Citizen submits ? API stores ticket ? AI classifies and assigns ? officer updates ? citizen sees status.</text>
+  <text class="t" x="500" y="794" text-anchor="middle" font-size="10">Modular monolith. Role checks are enforced on the API, not only in the UI.</text>
+</svg>

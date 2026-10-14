@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 214 100% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 214 84% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 60% 96%;
+    --secondary-foreground: 214 84% 35%;
+    --muted: 214 40% 94%;
+    --muted-foreground: 215 16% 46%;
+    --accent: 214 60% 94%;
+    --accent-foreground: 214 84% 35%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --border: 214 32% 88%;
+    --input: 214 32% 88%;
+    --ring: 214 84% 45%;
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { @apply scroll-smooth; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 py-8;
+  }
+  .section-title {
+    @apply text-2xl font-bold tracking-tight text-foreground;
+  }
+  .section-subtitle {
+    @apply text-sm text-muted-foreground mt-1;
+  }
+  .theme-card {
+    @apply rounded-xl border border-border bg-white shadow-sm;
+  }
+  .theme-surface {
+    @apply bg-[hsl(214,100%,97%)];
+  }
+  .sidebar-header {
+    @apply bg-primary text-white;
+  }
+  .nav-active {
+    @apply bg-white text-primary font-medium shadow-sm border border-primary/15;
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "description": "Simulated civic complaint classification dataset for Humanizr (text + optional image scenario). Ground truth department codes: PWD, SAN, WSD, ELEC, TNT, PAR.",
+  "models": [
+    "Gemini (production router — app/ai/gemini_router.py)",
+    "MiniLM text router (research/simulation)",
+    "CLIP ViT-B/32 (research/simulation)"
+  ],
+  "samples": [
+    {
+      "id": "SIM-001",
+      "title": "Large pothole on main road",
+      "description": "Deep pothole near the bus stop causing two-wheeler accidents. Needs urgent asphalt repair.",
+      "has_image": true,
+      "image_scenario": "Photo of cracked asphalt and pothole",
+      "ground_truth": { "department_code": "PWD", "category": "road_damage" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "PWD", "confidence": 0.92 },
+        "MiniLM text router": { "department_code": "PWD", "confidence": 0.88 },
+        "CLIP ViT-B/32": { "department_code": "PWD", "confidence": 0.81 }
+      }
+    },
+    {
+      "id": "SIM-002",
+      "title": "Garbage not collected for a week",
+      "description": "Municipal bin overflowing with plastic waste and smell spreading to nearby shops.",
+      "has_image": true,
+      "image_scenario": "Overflowing trash bin on street",
+      "ground_truth": { "department_code": "SAN", "category": "garbage" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "SAN", "confidence": 0.94 },
+        "MiniLM text router": { "department_code": "SAN", "confidence": 0.91 },
+        "CLIP ViT-B/32": { "department_code": "SAN", "confidence": 0.86 }
+      }
+    },
+    {
+      "id": "SIM-003",
+      "title": "Water pipeline burst",
+      "description": "Clean water flooding the lane from a broken pipe under the footpath.",
+      "has_image": true,
+      "image_scenario": "Water leak on road from pipe",
+      "ground_truth": { "department_code": "WSD", "category": "water" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "WSD", "confidence": 0.93 },
+        "MiniLM text router": { "department_code": "WSD", "confidence": 0.85 },
+        "CLIP ViT-B/32": { "department_code": "WSD", "confidence": 0.72 }
+      }
+    },
+    {
+      "id": "SIM-004",
+      "title": "Street light not working",
+      "description": "Three consecutive poles dark since last storm; safety issue at night.",
+      "has_image": false,
+      "image_scenario": null,
+      "ground_truth": { "department_code": "PWD", "category": "road_damage" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "PWD", "confidence": 0.78 },
+        "MiniLM text router": { "department_code": "PWD", "confidence": 0.82 },
+        "CLIP ViT-B/32": { "department_code": "ELEC", "confidence": 0.55 }
+      }
+    },
+    {
+      "id": "SIM-005",
+      "title": "Fallen electric wire",
+      "description": "Low hanging cable after tree branch fell. Sparks seen near transformer.",
+      "has_image": true,
+      "image_scenario": "Damaged wire and pole",
+      "ground_truth": { "department_code": "ELEC", "category": "electricity" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "ELEC", "confidence": 0.96 },
+        "MiniLM text router": { "department_code": "ELEC", "confidence": 0.89 },
+        "CLIP ViT-B/32": { "department_code": "ELEC", "confidence": 0.84 }
+      }
+    },
+    {
+      "id": "SIM-006",
+      "title": "Traffic signal stuck on red",
+      "description": "Junction near school gridlocked for 2 hours; signal not cycling.",
+      "has_image": true,
+      "image_scenario": "Broken traffic signal",
+      "ground_truth": { "department_code": "TNT", "category": "traffic" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "TNT", "confidence": 0.91 },
+        "MiniLM text router": { "department_code": "TNT", "confidence": 0.87 },
+        "CLIP ViT-B/32": { "department_code": "TNT", "confidence": 0.79 }
+      }
+    },
+    {
+      "id": "SIM-007",
+      "title": "Fallen tree in park",
+      "description": "Large branch blocking jogging track after heavy rain.",
+      "has_image": true,
+      "image_scenario": "Fallen tree in green park",
+      "ground_truth": { "department_code": "PAR", "category": "parks" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "PAR", "confidence": 0.9 },
+        "MiniLM text router": { "department_code": "PAR", "confidence": 0.84 },
+        "CLIP ViT-B/32": { "department_code": "PAR", "confidence": 0.88 }
+      }
+    },
+    {
+      "id": "SIM-008",
+      "title": "Illegal dumping of construction debris",
+      "description": "Rubble piled on vacant plot attracting stray dogs and dust.",
+      "has_image": true,
+      "image_scenario": "Construction waste pile",
+      "ground_truth": { "department_code": "SAN", "category": "garbage" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "SAN", "confidence": 0.88 },
+        "MiniLM text router": { "department_code": "SAN", "confidence": 0.86 },
+        "CLIP ViT-B/32": { "department_code": "SAN", "confidence": 0.8 }
+      }
+    },
+    {
+      "id": "SIM-009",
+      "title": "Contaminated tap water",
+      "description": "Brown sediment in drinking water supply for entire block since morning.",
+      "has_image": false,
+      "image_scenario": null,
+      "ground_truth": { "department_code": "WSD", "category": "water" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "WSD", "confidence": 0.9 },
+        "MiniLM text router": { "department_code": "WSD", "confidence": 0.92 },
+        "CLIP ViT-B/32": null
+      }
+    },
+    {
+      "id": "SIM-010",
+      "title": "Bus stop shelter damaged",
+      "description": "Glass panels broken; passengers standing in sun and rain.",
+      "has_image": true,
+      "image_scenario": "Damaged bus shelter",
+      "ground_truth": { "department_code": "TNT", "category": "traffic" },
+      "model_predictions": {
+        "Gemini 1.5 Flash": { "department_code": "TNT", "confidence": 0.86 },
+        "MiniLM text router": { "department_code": "PWD", "confidence": 0.62 },
+        "CLIP ViT-B/32": { "department_code": "TNT", "confidence": 0.74 }
+      }
+    }
+  ]
+}
