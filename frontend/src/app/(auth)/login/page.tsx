@@ -56,7 +56,11 @@ function LoginForm() {
   };
 
   return (
-    <AuthLayout title="Log in" subtitle="Welcome back — use the email and password for your account">
+    <AuthLayout
+      title="Log in"
+      subtitle="Welcome back — use the email and password for your account"
+      showComplaintHero
+    >
       {searchParams.get("registered") === "1" && (
         <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Account created. Log in with your email and password.

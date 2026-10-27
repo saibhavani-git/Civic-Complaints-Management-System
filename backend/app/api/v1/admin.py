@@ -34,6 +34,7 @@ async def list_users(_=Depends(require_roles(Role.ADMIN))):
             "department_name": dept_meta["name"] if dept_meta else None,
             "department_code": dept_meta["code"] if dept_meta else None,
             "phone": doc.get("phone"),
+            "service_area": (doc.get("service_area") or "").strip() or None,
         })
     return users
 

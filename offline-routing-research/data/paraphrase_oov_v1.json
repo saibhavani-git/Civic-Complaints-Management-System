@@ -1,0 +1,499 @@
+{
+  "name": "paraphrase_oov_v1",
+  "version": 1,
+  "description": "Hand-written civic complaints using fresh vocabulary (minimal overlap with civic_routing_v1.json). Used to compare TF-IDF+logreg vs embedding k-NN when wording diverges from the simulated ORR corpus.",
+  "parent_dataset": "civic_routing_v1.json",
+  "record_count": 70,
+  "records": [
+    {
+      "id": "OOV-PWD-01",
+      "title": "Asphalt buckling on arterial route",
+      "description": "Macadam ripples scrape vehicle undercarriages; subsidence worsened after monsoon deluge.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-02",
+      "title": "Kerbstone displacement beside flyover ramp",
+      "description": "Granite edging blocks shifted; two-wheelers struggle to merge safely onto elevated carriageway.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-03",
+      "title": "Tarmac stripped at bus bay",
+      "description": "Aggregate layer exposed where top coat peeled; axle stress cracks spreading nightly.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-04",
+      "title": "Shoulder collapse on express lane",
+      "description": "Earthen verge caved inward creating rollover risk for heavy freight haulers.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-05",
+      "title": "Speed cushion crumbled",
+      "description": "Loose rubble spans approach to plaza; motorists swerve unpredictably.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-06",
+      "title": "Lane paint entirely erased",
+      "description": "Demarcation invisible after resurfacing delay; merging chaos at dawn.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-07",
+      "title": "Grating flush missing",
+      "description": "Wheel traps formed where iron cover vanished from carriageway channel.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-08",
+      "title": "Culvert mouth caved under blacktop",
+      "description": "Void beneath driving surface widening; hollow echo when lorries pass.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-09",
+      "title": "Fissure widened across toll approach",
+      "description": "Longitudinal split deep enough to swallow bicycle tires.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-PWD-10",
+      "title": "Median barrier dented",
+      "description": "Steel guardrail bent inward after impact; shards protrude toward traffic.",
+      "department_code": "PWD",
+      "category": "road_damage"
+    },
+    {
+      "id": "OOV-SAN-01",
+      "title": "Refuse sacks ruptured on sidewalk",
+      "description": "Decomposing biomass spread across paving; bioaerosol nuisance for shopkeepers.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-02",
+      "title": "Dumpsters exceeding capacity",
+      "description": "Overflowing bins attract rodents; scheduled hauler absent entire fortnight.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-03",
+      "title": "Litter windrows by vent shaft",
+      "description": "Plastic film and food scraps piled waist-high behind storefronts.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-04",
+      "title": "Compactor leaked leachate",
+      "description": "Ochre stain on pavement from hydraulic fluid mixed with organic slurry.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-05",
+      "title": "Illegal scrap heap blocking alley",
+      "description": "Household discard stacked blocking egress; fire hazard suspected.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-06",
+      "title": "Sludge pond where bins stood",
+      "description": "Festering pool formed after containers removed without cleanup.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-07",
+      "title": "Organic matter smoldering",
+      "description": "Acrid haze from slow combustion of yard trimmings dumped curbside.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-08",
+      "title": "Curbside bins procurement delay",
+      "description": "No replacement containers delivered; households pile sacks nightly.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-09",
+      "title": "Sanitation crew skipped zone",
+      "description": "Pickup roster ignored thrice; maggots in rotting fruit heaps.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-SAN-10",
+      "title": "Recycling tote crushed",
+      "description": "Flattened container unusable; mixed refuse tossed beside it.",
+      "department_code": "SAN",
+      "category": "garbage"
+    },
+    {
+      "id": "OOV-WSD-01",
+      "title": "Potable supply turned ochre",
+      "description": "Household faucet yields rusty fluid; undrinkable since contractor visit.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-02",
+      "title": "Conduit seeping into basement",
+      "description": "Underground plumbing weeps fluid into storage alcove continuously.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-03",
+      "title": "Hydrant dribbling despite shut valve",
+      "description": "Unattended gush for hours; chlorination smell unusually strong.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-04",
+      "title": "Mains pressure collapse upstairs",
+      "description": "Upper-storey taps dry dawn to noon; hammering when neighbor showers.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-05",
+      "title": "Sediment plume after line flush",
+      "description": "Milky discoloration visible in bathtub; backflow suspected from excavation.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-06",
+      "title": "Standpipe gushing at plaza",
+      "description": "Public outlet left running; aquifer waste alarming shop owners.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-07",
+      "title": "Access panel spewing fluid",
+      "description": "Curbside hatch burst; pooling across pedestrian paving.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-08",
+      "title": "Reservoir odor abnormal",
+      "description": "Chemical tang stronger than usual; residents refuse to cook with supply.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-09",
+      "title": "Manifold hammering nightly",
+      "description": "Plumbing vibration rattles walls whenever adjacent unit draws bath.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-WSD-10",
+      "title": "Intake contamination post construction",
+      "description": "Turbid fluid after bore pit left open upstream of housing block.",
+      "department_code": "WSD",
+      "category": "water"
+    },
+    {
+      "id": "OOV-ELEC-01",
+      "title": "Overhead conductor severed",
+      "description": "Live cable dangling above pedestrian thoroughfare; arcing spotted.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-02",
+      "title": "Substation hum abnormal",
+      "description": "Intermittent sparks visible through ventilation louvers.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-03",
+      "title": "Luminaire batch flickering",
+      "description": "Boulevard illumination strobes after dusk; drivers disoriented.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-04",
+      "title": "Meter enclosure lid missing",
+      "description": "Energized terminals exposed at clinic entry; shock risk.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-05",
+      "title": "Feeder insulation charred",
+      "description": "Burnt sheath outside shopfront; smell of molten polymer.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-06",
+      "title": "Voltage sag when AC starts",
+      "description": "Appliances dim collectively; protection device trips repeatedly.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-07",
+      "title": "Lighting column leaning",
+      "description": "Impact bent mast; fixture aimed into oncoming lanes.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-08",
+      "title": "Ground strap corroded",
+      "description": "Distribution cabinet rusted; humming louder than usual.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-09",
+      "title": "Outage spans cul-de-sac",
+      "description": "Every dwelling dark since midnight; no crew dispatched.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-ELEC-10",
+      "title": "Arc flash heard at junction box",
+      "description": "Bang and smoke from pavement vault; cover blown askew.",
+      "department_code": "ELEC",
+      "category": "electricity"
+    },
+    {
+      "id": "OOV-TNT-01",
+      "title": "Heads frozen on crimson phase",
+      "description": "Chromated lamps stuck; rush hour queue exceeds two kilometers.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-02",
+      "title": "Refuge island paint faded",
+      "description": "Foot travelers unclear where to stand on boulevard intersection.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-03",
+      "title": "Automated bollard stuck raised",
+      "description": "Delivery vans trapped inside service zone entire morning.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-04",
+      "title": "Gantry display blank at peak",
+      "description": "Overhead guidance dark; motorists halt unpredictably.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-05",
+      "title": "Zebra markings erased",
+      "description": "Crosswalk invisible; near miss reported by cyclists.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-06",
+      "title": "U-turn ban signage toppled",
+      "description": "Confused drivers execute illegal turns; horns blaring.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-07",
+      "title": "Cycle track bollards missing",
+      "description": "Merge conflict between scooters and bicycles intensified.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-08",
+      "title": "Barrier stuck upright at plaza toll",
+      "description": "No vehicles pass; manual override absent.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-09",
+      "title": "Timing drift causes gridlock",
+      "description": "Sequential phases desynchronized; idle engines idling forty minutes.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-TNT-10",
+      "title": "Wayfinding board obscured",
+      "description": "Overgrown hedge hides directional arrows for outbound commuters.",
+      "department_code": "TNT",
+      "category": "traffic"
+    },
+    {
+      "id": "OOV-PAR-01",
+      "title": "Horticultural benches vandalized",
+      "description": "Timber slats splintered; nails protrude in recreation zone.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-02",
+      "title": "Turf irrigation failed",
+      "description": "Browning sward across athletic field; emitters clogged.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-03",
+      "title": "Play structure bolts loose",
+      "description": "Youths risk falls from climbing frame; maintenance overdue.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-04",
+      "title": "Shrubbery untrimmed months",
+      "description": "Foliage blocks walkways in municipal greenbelt.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-05",
+      "title": "Fountain basin dry",
+      "description": "Algae crusts ornamental pool; pump silent for weeks.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-06",
+      "title": "Perimeter chain link torn",
+      "description": "Stray animals enter; picnic tables overturned nightly.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-07",
+      "title": "Swing chains rusted through",
+      "description": "Joint pins failed; seat dangling by one link.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-08",
+      "title": "Mulch beds eroded",
+      "description": "Irrigation hardware exposed; tripping hazard for joggers.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-09",
+      "title": "Canopy limbs diseased",
+      "description": "Heavy branch fell across picnic table; cordoned with tape only.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-PAR-10",
+      "title": "Court surface peeling",
+      "description": "Substrate visible on basketball key; players slipping.",
+      "department_code": "PAR",
+      "category": "parks"
+    },
+    {
+      "id": "OOV-UNS-01",
+      "title": "Visa application status inquiry",
+      "description": "Embassy paperwork delay; not a municipal maintenance matter.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-02",
+      "title": "Ecommerce parcel damaged",
+      "description": "Vendor refuses replacement; consumer forum issue not civic routing.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-03",
+      "title": "Neighbor music volume dispute",
+      "description": "Mediation needed between tenants; no engineering fix required.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-04",
+      "title": "Stray canine adoption query",
+      "description": "Animal shelter coordination outside city maintenance scope.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-05",
+      "title": "Income tax form clarification",
+      "description": "Central revenue authority handles this; city hall cannot route.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-06",
+      "title": "University hostel admission",
+      "description": "Academic institution decision; unrelated to public works.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-07",
+      "title": "Private landlord rental dispute",
+      "description": "Contract disagreement between individuals; not municipal jurisdiction.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-08",
+      "title": "Mobile carrier billing error",
+      "description": "Telecom provider must resolve; no field crew applicable.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-09",
+      "title": "Restaurant license with state health",
+      "description": "Provincial hygiene permit; outside local engineering departments.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    },
+    {
+      "id": "OOV-UNS-10",
+      "title": "Flight cancellation compensation",
+      "description": "Air carrier owes refund; aviation regulator not municipal body.",
+      "department_code": "UNSUPPORTED",
+      "category": "other"
+    }
+  ]
+}

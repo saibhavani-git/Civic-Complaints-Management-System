@@ -184,10 +184,12 @@ Staff and residents share one **log in** page; after authentication you are sent
 
 ## Documentation
 
+- [Components & need flow (plain English)](docs/NEED_FLOW.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [API Reference](docs/API.md)
 - [Database Schema](docs/DATABASE.md)
-- [Deployment](docs/DEPLOYMENT.md)
+- [Deploy whole project (Docker / Vercel / Render)](docs/DEPLOY_FULL_STACK.md)
+- [Deployment (Azure)](docs/DEPLOYMENT.md)
 
 ## License
 
