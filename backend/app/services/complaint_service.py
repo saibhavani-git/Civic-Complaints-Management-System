@@ -26,6 +26,54 @@ def _normalize_role(role: str | object) -> str:
     return str(role).lower().strip()
 
 
+def _as_object_id(value: object) -> ObjectId | None:
+    """Coerce MongoDB ids stored as ObjectId or str."""
+    if value is None:
+        return None
+    if isinstance(value, ObjectId):
+        return value
+    text = str(value).strip()
+    if not text or len(text) != 24:
+        return None
+    try:
+        return ObjectId(text)
+    except Exception:
+        return None
+
+
+def _ids_equal(a: object, b: object) -> bool:
+    oa, ob = _as_object_id(a), _as_object_id(b)
+    if oa is None or ob is None:
+        return str(a) == str(b)
+    return oa == ob
+
+
+async def _reporter_fields_for_staff(doc: dict) -> tuple[str | None, str | None, str | None]:
+    """Reporter name/email/phone for officers — snapshot at submit, then live user lookup."""
+    name = doc.get("reporter_full_name")
+    email = doc.get("reporter_email")
+    phone = doc.get("reporter_phone")
+    if name and email:
+        return name, email, phone
+
+    citizen_oid = _as_object_id(doc.get("citizen_id"))
+    if not citizen_oid:
+        return name, email, phone
+
+    db = get_database()
+    citizen = await db.users.find_one(
+        {"_id": citizen_oid},
+        {"full_name": 1, "email": 1, "phone": 1},
+    )
+    if not citizen:
+        return name, email, phone
+    return (
+        name or citizen.get("full_name"),
+        email or citizen.get("email"),
+        phone or citizen.get("phone"),
+    )
+
+
 async def _cursor_to_list(cursor, *, length: int) -> list[dict]:
     """Motor cursors must use to_list — async list comps break on some runtimes."""
     if isinstance(cursor, list):
@@ -187,7 +235,7 @@ def _user_can_view_complaint(
     if role == "admin":
         return True
     if role == "citizen":
-        return str(doc.get("citizen_id")) == user_id
+        return _ids_equal(doc.get("citizen_id"), user_id)
     if role == "officer":
         assigned = doc.get("assigned_officer_id")
         return assigned is not None and str(assigned) == user_id
@@ -637,9 +685,20 @@ async def create_complaint(
     complaint_id = await _generate_complaint_id()
     image_docs = await _upload_images(images or [])
 
+    citizen_oid = ObjectId(citizen_id)
+    citizen_row = await db.users.find_one(
+        {"_id": citizen_oid},
+        {"full_name": 1, "email": 1, "phone": 1},
+    )
+    if not citizen_row:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Citizen account not found")
+
     doc = {
         "complaint_id": complaint_id,
-        "citizen_id": ObjectId(citizen_id),
+        "citizen_id": citizen_oid,
+        "reporter_full_name": citizen_row.get("full_name"),
+        "reporter_email": citizen_row.get("email"),
+        "reporter_phone": citizen_row.get("phone"),
         "title": data.title,
         "description": data.description,
         "images": image_docs,
@@ -653,7 +712,7 @@ async def create_complaint(
         "status_history": [
             {
                 "status": ComplaintStatus.SUBMITTED.value,
-                "changed_by": ObjectId(citizen_id),
+                "changed_by": citizen_oid,
                 "changed_at": now,
                 "note": "Complaint received",
             },
@@ -705,16 +764,16 @@ async def create_complaint(
         status=ComplaintStatus.SUBMITTED.value,
         citizen_id=citizen_id,
     )
-    return await get_complaint_by_id(str(complaint_oid))
+    return await get_complaint_by_id(str(complaint_oid), role="citizen")
 
 
-async def get_complaint_by_id(complaint_id: str) -> ComplaintResponse:
+async def get_complaint_by_id(complaint_id: str, *, role: str | None = None) -> ComplaintResponse:
     """Internal use after mutations; does not enforce viewer access."""
     db = get_database()
     complaint = await db.complaints.find_one({"_id": ObjectId(complaint_id)})
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
-    return await _format_complaint(complaint)
+    return await _format_complaint(complaint, role=role)
 
 
 async def get_complaint_for_viewer(
@@ -763,15 +822,8 @@ async def _format_complaint(doc: dict, *, role: str | None = None) -> ComplaintR
                 officer_email = officer.get("email")
                 officer_phone = officer.get("phone")
 
-    if viewer in ("officer", "dept_admin", "admin") and doc.get("citizen_id"):
-        citizen = await db.users.find_one(
-            {"_id": doc["citizen_id"]},
-            {"full_name": 1, "email": 1, "phone": 1},
-        )
-        if citizen:
-            citizen_name = citizen.get("full_name")
-            citizen_email = citizen.get("email")
-            citizen_phone = citizen.get("phone")
+    if viewer in ("officer", "dept_admin", "admin"):
+        citizen_name, citizen_email, citizen_phone = await _reporter_fields_for_staff(doc)
 
     raw_ai = _json_safe(doc.get("ai_metadata")) if doc.get("ai_metadata") else None
     ai_meta = _sanitize_ai_metadata_for_viewer(raw_ai if isinstance(raw_ai, dict) else None, role)
@@ -972,7 +1024,7 @@ async def assign_complaint_officer(
         department_id=dept_id,
     )
 
-    return await get_complaint_by_id(complaint_id)
+    return await get_complaint_by_id(complaint_id, role=actor_role)
 
 
 async def _officer_workload_map(department_id: str) -> dict[str, dict]:
@@ -1046,6 +1098,8 @@ async def update_complaint_status(
     new_status: str,
     user_id: str,
     note: str | None = None,
+    *,
+    actor_role: str | None = None,
 ) -> ComplaintResponse:
     db = get_database()
     complaint = await db.complaints.find_one({"_id": ObjectId(complaint_id)})
@@ -1062,7 +1116,7 @@ async def update_complaint_status(
 
     old_status = complaint.get("status")
     if old_status == new_status and not (note or "").strip():
-        return await get_complaint_by_id(complaint_id)
+        return await get_complaint_by_id(complaint_id, role=actor_role)
 
     await db.complaints.update_one(
         {"_id": ObjectId(complaint_id)},
@@ -1099,13 +1153,15 @@ async def update_complaint_status(
         officer_id=officer_id,
     )
 
-    return await get_complaint_by_id(complaint_id)
+    return await get_complaint_by_id(complaint_id, role=actor_role)
 
 
 async def resolve_complaint(
     complaint_id: str,
     user_id: str,
     notes: str,
+    *,
+    actor_role: str | None = None,
 ) -> ComplaintResponse:
     db = get_database()
     now = datetime.now(timezone.utc)
@@ -1154,7 +1210,7 @@ async def resolve_complaint(
             complaint_id=complaint_id,
         )
 
-    return await get_complaint_by_id(complaint_id)
+    return await get_complaint_by_id(complaint_id, role=actor_role)
 
 
 async def submit_feedback(
@@ -1167,7 +1223,7 @@ async def submit_feedback(
     complaint = await db.complaints.find_one({"_id": ObjectId(complaint_id)})
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
-    if str(complaint["citizen_id"]) != citizen_id:
+    if not _ids_equal(complaint.get("citizen_id"), citizen_id):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your complaint")
     if complaint.get("status") not in ["resolved", "closed"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Complaint not yet resolved")

@@ -114,8 +114,13 @@ async def patch_status(
     data: ComplaintStatusUpdate,
     current_user: UserInDB = Depends(require_roles(Role.OFFICER, Role.DEPT_ADMIN, Role.ADMIN)),
 ):
+    role = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
     return await update_complaint_status(
-        complaint_id, data.status.value, current_user.id, data.note
+        complaint_id,
+        data.status.value,
+        current_user.id,
+        data.note,
+        actor_role=role,
     )
 
 
@@ -125,7 +130,8 @@ async def post_resolve(
     data: ResolutionSchema,
     current_user: UserInDB = Depends(require_roles(Role.OFFICER, Role.DEPT_ADMIN, Role.ADMIN)),
 ):
-    return await resolve_complaint(complaint_id, current_user.id, data.notes)
+    role = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
+    return await resolve_complaint(complaint_id, current_user.id, data.notes, actor_role=role)
 
 
 @router.post("/{complaint_id}/feedback")

@@ -13,7 +13,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ title, subtitle, children, showComplaintHero }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)]">
+    <div className="flex min-h-screen">
       <div className="relative hidden lg:flex lg:w-1/2 flex-col justify-between overflow-hidden bg-primary p-12 text-white">
         {showComplaintHero && (
           <>

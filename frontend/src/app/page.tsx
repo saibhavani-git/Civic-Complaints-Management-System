@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { HomeOrDashboardRedirect } from "@/components/auth/HomeOrDashboardRedirect";
 import { Shield, Brain, MapPin, BarChart3, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 
 const features = [
@@ -21,6 +22,7 @@ const steps = [
 
 export default function HomePage() {
   return (
+    <HomeOrDashboardRedirect>
     <div>
       {/* Hero */}
       <section className="relative overflow-hidden border-b bg-white">
@@ -86,5 +88,6 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+    </HomeOrDashboardRedirect>
   );
 }

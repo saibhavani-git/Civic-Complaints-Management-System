@@ -13,6 +13,8 @@ import { SIDEBAR_WIDTH } from "@/components/layout/PortalSidebar";
 
 const PORTAL_PREFIXES = ["/dashboard", "/complaints", "/profile", "/notifications", "/officer", "/admin"];
 
+import { isGuestOnlyRoute } from "@/lib/authRoutes";
+
 function isPortalPage(pathname: string) {
   return PORTAL_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }
@@ -24,7 +26,11 @@ function isAccountProfilePage(pathname: string) {
 export function Navbar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
-  const isAuthPage = pathname === "/login" || pathname === "/sign-in" || pathname === "/register";
+
+  if (isGuestOnlyRoute(pathname)) {
+    return null;
+  }
+
   const inPortal = user && isPortalPage(pathname);
 
   const logo = (
@@ -38,7 +44,7 @@ export function Navbar() {
 
   const actions = user ? (
     <>
-      {!isAuthPage && !inPortal && (
+      {!inPortal && (
         <Link href={getDashboardPath(user.role)}>
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex gap-1.5 text-primary hover:text-primary hover:bg-primary/10">
             <LayoutDashboard className="h-4 w-4" />
