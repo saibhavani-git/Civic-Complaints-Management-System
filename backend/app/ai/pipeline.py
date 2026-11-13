@@ -66,8 +66,10 @@ async def _link_duplicate_group(complaint_id: str, primary_id: str, similarity: 
 
 
 def _priority_from_gemini(gemini: dict | None) -> tuple[str, dict]:
+    from app.ai.departments_config import normalize_priority
+
     if gemini and gemini.get("priority"):
-        level = gemini["priority"]
+        level = normalize_priority(gemini["priority"])
         return level, {
             "level": level,
             "confidence": gemini.get("confidence", 0.75),

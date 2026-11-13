@@ -3,15 +3,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HomeOrDashboardRedirect } from "@/components/auth/HomeOrDashboardRedirect";
-import { Shield, Brain, MapPin, BarChart3, Clock, CheckCircle2, ArrowRight } from "lucide-react";
+import { Brain, MapPin, Clock, CheckCircle2, ArrowRight } from "lucide-react";
 
 const features = [
   { icon: Brain, title: "AI Classification", desc: "Complaints auto-routed to the right department" },
   { icon: Clock, title: "Real-time Tracking", desc: "Follow your complaint status at every step" },
   { icon: MapPin, title: "Location-based", desc: "Pin issues on a map for precise resolution" },
-  { icon: BarChart3, title: "Analytics", desc: "Data-driven insights for authorities" },
   { icon: CheckCircle2, title: "Faster Resolution", desc: "Smart prioritization reduces response time" },
-  { icon: Shield, title: "Secure & Transparent", desc: "Your data is protected end-to-end" },
 ];
 
 const steps = [
@@ -74,7 +72,7 @@ export default function HomePage() {
         <div className="page-container">
           <h2 className="text-center section-title mb-2">Platform features</h2>
           <p className="text-center section-subtitle mb-10">Built for citizens and government alike</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {features.map(({ icon: Icon, title, desc }) => (
               <div key={title} className="rounded-xl border bg-card p-5 hover:shadow-sm transition-shadow">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">

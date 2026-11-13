@@ -36,7 +36,7 @@ export type ComplaintStatus =
   | "closed"
   | "rejected";
 
-export type Priority = "low" | "medium" | "high" | "critical";
+export type Priority = "low" | "medium" | "high";
 
 export interface AIMetadata {
   summary?: string;

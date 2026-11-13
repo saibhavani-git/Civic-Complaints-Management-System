@@ -14,7 +14,17 @@ _UNSUPPORTED_ROUTING_CODES: frozenset[str] = frozenset(
     {UNSUPPORTED_DEPARTMENT_CODE, "NONE", "NA", "N/A", "OTHER", "OUT_OF_SCOPE"}
 )
 
-PRIORITY_LEVELS: tuple[str, ...] = ("low", "medium", "high", "critical")
+PRIORITY_LEVELS: tuple[str, ...] = ("low", "medium", "high")
+
+
+def normalize_priority(value: object) -> str:
+    """Three complaint priorities. Older 'critical' records count as high."""
+    text = str(value or "").lower().strip()
+    if text == "critical":
+        return "high"
+    if text in PRIORITY_LEVELS:
+        return text
+    return "medium"
 
 COMPLAINT_CATEGORIES: tuple[str, ...] = (
     "road_damage",

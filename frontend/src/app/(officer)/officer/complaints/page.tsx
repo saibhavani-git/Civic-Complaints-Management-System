@@ -46,7 +46,7 @@ export default function OfficerComplaintsPage() {
         description={
           dept
             ? `${dept} — assigned complaints, highest priority first`
-            : "Assigned complaints, highest priority first (critical → high → medium → low)"
+            : "Assigned complaints, highest priority first (high → medium → low)"
         }
       />
 

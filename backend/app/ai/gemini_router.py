@@ -7,8 +7,8 @@ from typing import Any, Optional
 
 from app.ai.departments_config import (
     COMPLAINT_CATEGORIES,
-    PRIORITY_LEVELS,
     UNSUPPORTED_DEPARTMENT_CODE,
+    normalize_priority,
     format_routing_department_list,
     is_unsupported_department_code,
     load_routing_departments,
@@ -50,9 +50,7 @@ def _build_unsupported_routing(
     if category not in COMPLAINT_CATEGORIES:
         category = "other"
 
-    priority = str(parsed.get("priority", "medium")).lower().strip()
-    if priority not in PRIORITY_LEVELS:
-        priority = "medium"
+    priority = normalize_priority(parsed.get("priority"))
 
     confidence = float(parsed.get("confidence", 0.85))
     confidence = max(0.0, min(1.0, confidence))
@@ -142,9 +140,7 @@ async def classify_complaint_with_gemini(
         confidence = float(parsed.get("confidence", 0.75))
         confidence = max(0.0, min(1.0, confidence))
 
-        priority = str(parsed.get("priority", "medium")).lower().strip()
-        if priority not in PRIORITY_LEVELS:
-            priority = "medium"
+        priority = normalize_priority(parsed.get("priority"))
 
         return {
             "unsupported": False,

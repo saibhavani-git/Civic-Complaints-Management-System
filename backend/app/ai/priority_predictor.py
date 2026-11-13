@@ -1,6 +1,6 @@
 """Priority from text urgency + duplicate cluster density (high duplicates → higher priority)."""
 
-PRIORITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+PRIORITY_RANK = {"low": 0, "medium": 1, "high": 2}
 
 
 def _text_priority_score(text: str) -> str:
@@ -25,7 +25,7 @@ def _text_priority_score(text: str) -> str:
 
     score = critical_count * 4 + high_count * 2 + medium_count
     if score >= 4 or critical_count >= 1:
-        return "critical"
+        return "high"
     if score >= 2 or high_count >= 1:
         return "high"
     if score >= 1 or medium_count >= 1:
@@ -39,7 +39,7 @@ def _duplicate_priority_boost(duplicate_check: dict) -> str:
     strength = duplicate_check.get("cluster_strength", "low")
 
     if strength == "critical" or count >= 10:
-        return "critical"
+        return "high"
     if strength == "high" or (duplicate_check.get("is_duplicate") and sim >= 0.9):
         return "high"
     if strength == "medium" or count >= 3:

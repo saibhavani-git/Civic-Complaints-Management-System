@@ -12,6 +12,7 @@ import { OfficerActions, DeptAdminResolveActions, FeedbackForm } from "@/compone
 import { ComplaintPhotoGrid } from "@/components/complaints/ComplaintPhotoGrid";
 import { AssignOfficerPanel } from "@/components/complaints/AssignOfficerPanel";
 import { ComplaintProgressTracker } from "@/components/complaints/ComplaintProgressTracker";
+import { priorityLabel } from "@/lib/complaintStatus";
 import { MapPin, ArrowLeft, Loader2, User, Mail, Phone } from "lucide-react";
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -200,7 +201,7 @@ export function ComplaintDetailView({ backHref }: { backHref?: string }) {
                 Department: <strong>{complaint.department_name}</strong>
               </li>
               <li>
-                Priority: <strong className="capitalize">{complaint.priority}</strong>
+                Priority: <strong>{priorityLabel(complaint.priority)}</strong>
               </li>
             </ul>
           </DetailSection>

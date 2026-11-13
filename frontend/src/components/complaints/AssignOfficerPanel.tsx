@@ -36,8 +36,6 @@ export type DeptOfficerForAssign = {
 
   active_assigned_count?: number;
 
-  critical_count?: number;
-
   high_count?: number;
 
   medium_count?: number;
@@ -51,8 +49,6 @@ export type DeptOfficerForAssign = {
 function PriorityWorkload({ o }: { o: DeptOfficerForAssign }) {
 
   const items = [
-
-    { key: "critical", label: "Critical", count: o.critical_count ?? 0, className: "bg-red-100 text-red-800 ring-red-200" },
 
     { key: "high", label: "High", count: o.high_count ?? 0, className: "bg-amber-100 text-amber-900 ring-amber-200" },
 

@@ -14,7 +14,9 @@ Use these together. Do not mix them with Docker’s API port.
 | Queue | http://127.0.0.1:3030 |
 | Redis | `127.0.0.1:6380` (Docker container `humanizr-redis`) |
 
-Docker Compose is a separate way to run the stack. In that mode the API is published on **port 8000**, not 8002. Run either `npm start` or Docker, not both, and set `NEXT_PUBLIC_API_URL` to the API you started.
+Local mode has one backend port: **8002**. The website on port 3000 talks only to that API (`frontend/.env.local` → `http://localhost:8002/api/v1`). Nothing in local mode listens on 8000.
+
+Docker Compose is a separate way to run the stack. In that mode the API is published on **port 8000**, not 8002. Run either `npm start` or Docker, not both.
 
 ## What you need
 

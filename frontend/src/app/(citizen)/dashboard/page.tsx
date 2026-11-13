@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ComplaintCard } from "@/components/complaints/ComplaintCard";
 import { ComplaintFilters } from "@/components/complaints/ComplaintShared";
 import { citizenGroupMatches } from "@/lib/complaintFilters";
+import { publicStatus } from "@/lib/complaintStatus";
 
 import { PageHeader, StatCard, EmptyState } from "@/components/layout/PageHeader";
 
@@ -68,22 +69,10 @@ function DashboardContent() {
 
 
 
-  const inProgressStatuses = [
-    "pending",
-    "submitted",
-    "ai_processing",
-    "routed_to_department",
-    "ai_processed",
-    "verified",
-    "assigned",
-    "work_started",
-    "in_progress",
-  ] as const;
-
   const stats = {
     total: data?.total || 0,
-    inProgress: allComplaints.filter((c) => (inProgressStatuses as readonly string[]).includes(c.status)).length,
-    resolved: allComplaints.filter((c) => ["resolved", "closed"].includes(c.status)).length,
+    inProgress: allComplaints.filter((c) => publicStatus(c.status) === "in_progress").length,
+    resolved: allComplaints.filter((c) => publicStatus(c.status) === "resolved").length,
   };
 
 

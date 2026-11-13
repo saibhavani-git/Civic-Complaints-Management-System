@@ -19,15 +19,24 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const role = user ? normalizeRole(user.role) : null;
+  const isPersonDetail = pathname.startsWith("/admin/staff/people/");
+  const deptAdminViewingPerson = role === "dept_admin" && isPersonDetail;
 
   useEffect(() => {
     if (isLoading) return;
-    if (role && role !== "admin") {
-      router.replace("/admin/dashboard");
-    }
-  }, [isLoading, role, router]);
+    if (role === "admin" || deptAdminViewingPerson) return;
+    if (role) router.replace("/admin/dashboard");
+  }, [isLoading, role, router, deptAdminViewingPerson]);
 
-  if (isLoading || role !== "admin") {
+  if (isLoading || !role) {
+    return null;
+  }
+
+  if (deptAdminViewingPerson) {
+    return <div>{children}</div>;
+  }
+
+  if (role !== "admin") {
     return null;
   }
 

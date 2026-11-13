@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { statusLabel } from "@/lib/complaintStatus";
+import { priorityLabel, publicStatus, statusLabel } from "@/lib/complaintStatus";
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "muted";
 
@@ -41,35 +41,26 @@ export function StatusBadge({
   status: string;
   unsupportedDepartment?: boolean;
 }) {
+  const group = publicStatus(status);
   const map: Record<string, BadgeVariant> = {
     submitted: "muted",
-    pending: "warning",
-    ai_processing: "info",
-    ai_processed: "info",
-    routed_to_department: "info",
-    verified: "info",
-    assigned: "info",
-    work_started: "warning",
-    in_progress: "warning",
-    work_completed: "success",
+    in_progress: "info",
     resolved: "success",
-    feedback_received: "success",
-    closed: "muted",
     rejected: "danger",
   };
   return (
-    <Badge variant={map[status] || "muted"}>
+    <Badge variant={map[group] || "muted"}>
       {statusLabel(status, { unsupportedDepartment })}
     </Badge>
   );
 }
 
 export function PriorityBadge({ priority }: { priority: string }) {
+  const label = priorityLabel(priority);
   const map: Record<string, BadgeVariant> = {
-    low: "muted",
-    medium: "info",
-    high: "warning",
-    critical: "danger",
+    Low: "muted",
+    Medium: "info",
+    High: "warning",
   };
-  return <Badge variant={map[priority] || "muted"}>{priority}</Badge>;
+  return <Badge variant={map[label] || "muted"}>{label}</Badge>;
 }

@@ -41,10 +41,25 @@ async def list_users(_=Depends(require_roles(Role.ADMIN))):
 
 
 @router.get("/users/{user_id}/cases")
-async def user_cases(user_id: str, _=Depends(require_roles(Role.ADMIN))):
+async def user_cases(
+    user_id: str,
+    current_user=Depends(require_roles(Role.ADMIN, Role.DEPT_ADMIN)),
+):
     report = await get_person_case_report(user_id)
     if report is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
+    if current_user.role == Role.DEPT_ADMIN.value:
+        person = report["person"]
+        same_department = (
+            current_user.department_id
+            and person.get("department_id")
+            and str(person["department_id"]) == str(current_user.department_id)
+        )
+        if person.get("role") != "officer" or not same_department:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only view officers in your department",
+            )
     return report
 
 

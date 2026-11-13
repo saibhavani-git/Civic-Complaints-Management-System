@@ -2,14 +2,30 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle, Clock, Loader2, MapPin } from "lucide-react";
+import { CheckCircle, Clock, Loader2, MapPin } from "lucide-react";
 import { adminApi } from "@/lib/api";
 import { PageHeader, StatCard } from "@/components/layout/PageHeader";
 import { RoleBadge } from "@/components/account/RoleBadge";
 import { Badge, PriorityBadge, StatusBadge } from "@/components/ui/badge";
-import type { PersonCase, PersonCaseReport, PersonCaseSummary } from "@/components/admin/people/types";
+import type { PersonCase, PersonCaseReport } from "@/components/admin/people/types";
+import { priorityLabel, statusLabel } from "@/lib/complaintStatus";
 import { formatDate } from "@/lib/utils";
 import { normalizeRole } from "@/lib/roles";
+import { useAuth } from "@/hooks/useAuth";
+
+function categoryLabel(category?: string | null) {
+  if (!category) return null;
+  const known: Record<string, string> = {
+    garbage: "Garbage",
+    road_damage: "Road damage",
+    water: "Water",
+    electricity: "Electricity",
+    traffic: "Traffic",
+    parks: "Parks",
+    other: "Other",
+  };
+  return known[category] ?? category.replace(/_/g, " ");
+}
 
 const BACK: Record<string, { href: string; label: string }> = {
   admin: { href: "/admin/staff/administrators", label: "Administrators" },
@@ -18,51 +34,54 @@ const BACK: Record<string, { href: string; label: string }> = {
   citizen: { href: "/admin/staff/residents", label: "Residents" },
 };
 
+const PRIORITY_LEVELS = [
+  { key: "high", title: "High priority", empty: "No high priority cases." },
+  { key: "medium", title: "Medium priority", empty: "No medium priority cases." },
+  { key: "low", title: "Low priority", empty: "No low priority cases." },
+] as const;
+
+function priorityLevel(priority: string) {
+  if (priority === "critical" || priority === "high") return "high";
+  if (priority === "low") return "low";
+  return "medium";
+}
+
 const COPY = {
   assigned: {
-    lead: "Cases assigned to this officer.",
-    solved: "Solved",
-    current: "Current",
-    critical: "Critical",
-    solvedTitle: "Solved cases",
+    lead: "Complaints this officer has solved, and the ones they are solving now.",
+    solved: "Complaints solved",
+    current: "Currently solving",
     solvedHint: "Finished or closed while assigned to this officer.",
-    solvedEmpty: "No solved cases yet.",
-    currentTitle: "Current cases",
-    currentHint: "Open work: assigned, in progress, or waiting for a department head to close it.",
-    currentEmpty: "No open cases.",
-    criticalTitle: "Critical cases",
-    criticalHint: "Open cases marked critical.",
-    criticalEmpty: "No open critical cases.",
+    solvedEmpty: "No complaints solved yet.",
+    currentHint: "Assigned work that is still open.",
+    currentEmpty: "Not solving any complaints right now.",
   },
   reported: {
-    lead: "Complaints this resident filed.",
-    solved: "Finished",
-    current: "Open",
-    critical: "Critical",
-    solvedTitle: "Finished reports",
+    lead: "Complaints this resident filed that are solved, and the ones still being solved.",
+    solved: "Complaints solved",
+    current: "Still being solved",
     solvedHint: "Reports that have been resolved or closed.",
-    solvedEmpty: "No finished reports yet.",
-    currentTitle: "Open reports",
-    currentHint: "Reports that are still being handled.",
-    currentEmpty: "No open reports.",
-    criticalTitle: "Critical reports",
-    criticalHint: "Open reports marked critical.",
-    criticalEmpty: "No open critical reports.",
+    solvedEmpty: "No solved complaints yet.",
+    currentHint: "Reports that are still open.",
+    currentEmpty: "No open complaints.",
   },
   department: {
-    lead: "Cases in this department.",
-    solved: "Resolved",
-    current: "Open",
-    critical: "Critical",
-    solvedTitle: "Resolved cases",
-    solvedHint: "Department cases that are finished or closed.",
-    solvedEmpty: "No resolved cases yet.",
-    currentTitle: "Open cases",
-    currentHint: "Still in the department queue or with a field officer.",
-    currentEmpty: "No open cases.",
-    criticalTitle: "Critical cases",
-    criticalHint: "Open department cases marked critical.",
-    criticalEmpty: "No open critical cases.",
+    lead: "Complaints solved in this department, and the ones still being solved.",
+    solved: "Complaints solved",
+    current: "Currently solving",
+    solvedHint: "Department complaints that are finished or closed.",
+    solvedEmpty: "No complaints solved yet.",
+    currentHint: "Department complaints that are still open.",
+    currentEmpty: "Nothing is being solved right now.",
+  },
+  none: {
+    lead: "Complaints this person has solved, and the ones they are solving now.",
+    solved: "Complaints solved",
+    current: "Currently solving",
+    solvedHint: "Finished complaints linked to this person.",
+    solvedEmpty: "No complaints solved yet.",
+    currentHint: "Open complaints linked to this person.",
+    currentEmpty: "Not solving any complaints right now.",
   },
 } as const;
 
@@ -84,6 +103,25 @@ function CaseRow({
             {item.department_code ? ` · ${item.department_code}` : ""}
           </p>
           <p className="mt-0.5 font-medium">{item.title}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Labels</span>
+            <StatusBadge status={item.status} />
+            <PriorityBadge priority={item.priority} />
+            {categoryLabel(item.category) && <Badge variant="muted">{categoryLabel(item.category)}</Badge>}
+            {(item.department_code || item.department_name) && (
+              <Badge variant="info">
+                {item.department_code ? `${item.department_code} · ` : ""}
+                {item.department_name || "Department"}
+              </Badge>
+            )}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Status: {statusLabel(item.status)}
+            {" · "}
+            Priority: {priorityLabel(item.priority)}
+            {categoryLabel(item.category) ? ` · Category: ${categoryLabel(item.category)}` : ""}
+            {item.department_name ? ` · Department: ${item.department_name}` : ""}
+          </p>
           <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3 shrink-0" />
             <span className="truncate">{item.address || "Location set"}</span>
@@ -94,10 +132,6 @@ function CaseRow({
           {showOfficer && item.officer_name && (
             <p className="mt-1 text-xs text-muted-foreground">Officer: {item.officer_name}</p>
           )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={item.status} />
-          <PriorityBadge priority={item.priority} />
         </div>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">
@@ -156,31 +190,12 @@ function CaseSection({
   );
 }
 
-function StageLine({ summary }: { summary: PersonCaseSummary }) {
-  const chips = [
-    summary.waiting_assignment > 0 ? `${summary.waiting_assignment} not yet assigned` : null,
-    `${summary.assigned} assigned`,
-    `${summary.in_progress} in progress`,
-    `${summary.awaiting_close} awaiting close`,
-    `${summary.rejected} rejected`,
-    summary.critical_solved > 0 ? `${summary.critical_solved} critical already solved` : null,
-  ].filter(Boolean);
-
-  return (
-    <div className="mb-8 flex flex-wrap gap-2">
-      {chips.map((label) => (
-        <span key={label} className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-          {label}
-        </span>
-      ))}
-      <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
-        {summary.resolution_rate}% resolved
-      </span>
-    </div>
-  );
-}
-
 export function PersonCaseView({ userId }: { userId: string }) {
+  const { user } = useAuth();
+  const viewerIsDeptAdmin = normalizeRole(user?.role) === "dept_admin";
+  const viewerBack = viewerIsDeptAdmin
+    ? { href: "/admin/team", label: "Field team" }
+    : null;
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-user-cases", userId],
     queryFn: () => adminApi.userCases(userId).then((r) => r.data as PersonCaseReport),
@@ -198,7 +213,11 @@ export function PersonCaseView({ userId }: { userId: string }) {
   if (isError || !data) {
     return (
       <div>
-        <PageHeader title="Person" backHref="/admin/staff/field-staff" backLabel="Staff" />
+        <PageHeader
+          title="Person"
+          backHref={viewerBack?.href ?? "/admin/staff/field-staff"}
+          backLabel={viewerBack?.label ?? "Staff"}
+        />
         <p className="text-sm text-destructive">Could not load this person. They may have been removed.</p>
       </div>
     );
@@ -206,8 +225,10 @@ export function PersonCaseView({ userId }: { userId: string }) {
 
   const { person, summary } = data;
   const role = normalizeRole(person.role);
-  const back = BACK[role] ?? BACK.officer;
-  const scope = person.scope === "none" ? null : COPY[person.scope];
+  const back = viewerBack ?? BACK[role] ?? BACK.officer;
+  const scope = COPY[person.scope] ?? COPY.none;
+  const isSystemAdmin = normalizeRole(person.role) === "admin";
+  const isOfficer = person.scope === "assigned";
   const showReporter = person.scope === "assigned" || person.scope === "department";
   const showOfficer = person.scope === "reported" || person.scope === "department";
 
@@ -215,7 +236,7 @@ export function PersonCaseView({ userId }: { userId: string }) {
     <div>
       <PageHeader
         title={person.full_name}
-        description={scope?.lead ?? "System administrators are not assigned field cases."}
+        description={isSystemAdmin ? "System administrators do not handle cases." : scope.lead}
         backHref={back.href}
         backLabel={back.label}
       />
@@ -251,50 +272,16 @@ export function PersonCaseView({ userId }: { userId: string }) {
         </dl>
       </div>
 
-      {!scope ? (
-        <p className="text-sm text-muted-foreground">
-          This account runs the platform. Open{" "}
-          <Link href="/admin/complaints" className="text-primary hover:underline">
-            complaints
-          </Link>{" "}
-          for the city-wide list.
-        </p>
-      ) : (
+      {isSystemAdmin ? null : (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-4 lg:grid-cols-3">
+          <div className="mb-6 grid grid-cols-2 gap-4">
             <StatCard label={scope.solved} value={summary.solved} icon={CheckCircle} iconClassName="bg-emerald-50 [&>svg]:text-emerald-600" />
             <StatCard label={scope.current} value={summary.current} icon={Clock} iconClassName="bg-orange-50 [&>svg]:text-orange-600" />
-            <StatCard label={scope.critical} value={summary.critical} icon={AlertTriangle} iconClassName="bg-red-50 [&>svg]:text-red-600" />
-            <StatCard label="High" value={summary.high} icon={AlertTriangle} iconClassName="bg-amber-50 [&>svg]:text-amber-600" />
-            <StatCard label="Medium" value={summary.medium} icon={Clock} iconClassName="bg-blue-50 [&>svg]:text-blue-600" />
-            <StatCard label="Low" value={summary.low} icon={CheckCircle} iconClassName="bg-slate-100 [&>svg]:text-slate-600" />
           </div>
-          <p className="mb-3 text-xs text-muted-foreground">
-            High, medium, and low counts are open cases only. Critical is the open critical count.
-          </p>
-          <StageLine summary={summary} />
 
           <div className="space-y-4">
             <CaseSection
-              title={scope.criticalTitle}
-              hint={scope.criticalHint}
-              items={data.critical}
-              total={summary.critical}
-              empty={scope.criticalEmpty}
-              showReporter={showReporter}
-              showOfficer={showOfficer}
-            />
-            <CaseSection
-              title={scope.currentTitle}
-              hint={scope.currentHint}
-              items={data.current}
-              total={summary.current}
-              empty={scope.currentEmpty}
-              showReporter={showReporter}
-              showOfficer={showOfficer}
-            />
-            <CaseSection
-              title={scope.solvedTitle}
+              title={scope.solved}
               hint={scope.solvedHint}
               items={data.solved}
               total={summary.solved}
@@ -302,6 +289,37 @@ export function PersonCaseView({ userId }: { userId: string }) {
               showReporter={showReporter}
               showOfficer={showOfficer}
             />
+            {isOfficer ? (
+              <section className="space-y-3">
+                <h2 className="text-sm font-semibold">{scope.current}</h2>
+                <p className="text-xs text-muted-foreground -mt-2">{scope.currentHint}</p>
+                {PRIORITY_LEVELS.map((level) => {
+                  const items = data.current.filter((item) => priorityLevel(item.priority) === level.key);
+                  return (
+                    <CaseSection
+                      key={level.key}
+                      title={level.title}
+                      hint={`${items.length} open ${level.key} priority ${items.length === 1 ? "case" : "cases"}.`}
+                      items={items}
+                      total={items.length}
+                      empty={level.empty}
+                      showReporter={showReporter}
+                      showOfficer={showOfficer}
+                    />
+                  );
+                })}
+              </section>
+            ) : (
+              <CaseSection
+                title={scope.current}
+                hint={scope.currentHint}
+                items={data.current}
+                total={summary.current}
+                empty={scope.currentEmpty}
+                showReporter={showReporter}
+                showOfficer={showOfficer}
+              />
+            )}
           </div>
         </>
       )}

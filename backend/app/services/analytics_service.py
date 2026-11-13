@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 
+from app.ai.departments_config import normalize_priority
 from app.db.database import get_database
 from app.schemas.common import AnalyticsOverview
 
@@ -39,10 +40,11 @@ async def get_analytics_overview(department_id: ObjectId | None = None) -> Analy
         *([{"$match": base}] if base else []),
         {"$group": {"_id": "$priority", "count": {"$sum": 1}}},
     ]
-    priority_dist: dict[str, int] = {"low": 0, "medium": 0, "high": 0, "critical": 0}
+    priority_dist: dict[str, int] = {"low": 0, "medium": 0, "high": 0}
     async for doc in db.complaints.aggregate(priority_pipeline):
         if doc["_id"]:
-            priority_dist[doc["_id"]] = doc["count"]
+            level = normalize_priority(doc["_id"])
+            priority_dist[level] = priority_dist.get(level, 0) + doc["count"]
 
     resolution_pipeline = [
         {
@@ -143,7 +145,7 @@ _REJECTED_STATUSES = {"rejected"}
 _AWAITING_CLOSE = {"work_completed"}
 _IN_PROGRESS = {"work_started", "in_progress"}
 _ASSIGNED_ONLY = {"assigned"}
-_PRIORITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+_PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
 _CASE_LIST_LIMIT = 40
 
 
@@ -159,10 +161,7 @@ def _id_variants(value: object) -> list:
 
 
 def _case_priority(value: object) -> str:
-    text = str(value or "").lower()
-    if text in _PRIORITY_RANK:
-        return text
-    return "medium"
+    return normalize_priority(value)
 
 
 def _case_status(value: object) -> str:

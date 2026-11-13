@@ -103,9 +103,9 @@ def _coerce_status(value: str | None) -> str:
 
 
 def _coerce_priority(value: str | None) -> str:
-    if value and value in _VALID_PRIORITIES:
-        return value
-    return "medium"
+    from app.ai.departments_config import normalize_priority
+
+    return normalize_priority(value)
 
 
 def _sanitize_images(images: list | None) -> list[dict]:
@@ -249,10 +249,9 @@ def _user_can_view_complaint(
 _PRIORITY_RANK_STAGE = {
     "$switch": {
         "branches": [
-            {"case": {"$eq": ["$priority", "critical"]}, "then": 0},
-            {"case": {"$eq": ["$priority", "high"]}, "then": 1},
-            {"case": {"$eq": ["$priority", "medium"]}, "then": 2},
-            {"case": {"$eq": ["$priority", "low"]}, "then": 3},
+            {"case": {"$in": ["$priority", ["critical", "high"]]}, "then": 0},
+            {"case": {"$eq": ["$priority", "medium"]}, "then": 1},
+            {"case": {"$eq": ["$priority", "low"]}, "then": 2},
         ],
         "default": 2,
     }
@@ -933,6 +932,30 @@ _ASSIGNABLE_STATUSES = (
     ComplaintStatus.VERIFIED.value,
 )
 
+# Public filters: Submitted, In progress, Resolved, Rejected.
+_PUBLIC_STATUS_GROUPS: dict[str, list[str]] = {
+    "submitted": [
+        ComplaintStatus.SUBMITTED.value,
+        ComplaintStatus.AI_PROCESSING.value,
+    ],
+    "in_progress": [
+        ComplaintStatus.ROUTED_TO_DEPARTMENT.value,
+        ComplaintStatus.AI_PROCESSED.value,
+        ComplaintStatus.VERIFIED.value,
+        ComplaintStatus.PENDING.value,
+        ComplaintStatus.ASSIGNED.value,
+        ComplaintStatus.WORK_STARTED.value,
+        ComplaintStatus.IN_PROGRESS.value,
+        ComplaintStatus.WORK_COMPLETED.value,
+    ],
+    "resolved": [
+        ComplaintStatus.RESOLVED.value,
+        ComplaintStatus.CLOSED.value,
+        ComplaintStatus.FEEDBACK_RECEIVED.value,
+    ],
+    "rejected": [ComplaintStatus.REJECTED.value],
+}
+
 
 async def list_complaints(
     user_id: str,
@@ -970,9 +993,14 @@ async def list_complaints(
             {"assigned_officer_id": None},
         ]
     elif status_filter:
-        query["status"] = status_filter
+        group = _PUBLIC_STATUS_GROUPS.get(status_filter)
+        query["status"] = {"$in": group} if group else status_filter
     if priority_filter:
-        query["priority"] = priority_filter
+        level = _coerce_priority(priority_filter)
+        if level == "high":
+            query["priority"] = {"$in": ["high", "critical"]}
+        else:
+            query["priority"] = level
 
     skip = (page - 1) * limit
     total = await db.complaints.count_documents(query)
@@ -1103,8 +1131,7 @@ async def _officer_workload_map(department_id: str) -> dict[str, dict]:
             "$group": {
                 "_id": "$assigned_officer_id",
                 "active_assigned_count": {"$sum": 1},
-                "critical_count": {"$sum": {"$cond": [{"$eq": ["$priority", "critical"]}, 1, 0]}},
-                "high_count": {"$sum": {"$cond": [{"$eq": ["$priority", "high"]}, 1, 0]}},
+                "high_count": {"$sum": {"$cond": [{"$in": ["$priority", ["high", "critical"]]}, 1, 0]}},
                 "medium_count": {"$sum": {"$cond": [{"$eq": ["$priority", "medium"]}, 1, 0]}},
                 "low_count": {"$sum": {"$cond": [{"$eq": ["$priority", "low"]}, 1, 0]}},
             }
@@ -1114,7 +1141,6 @@ async def _officer_workload_map(department_id: str) -> dict[str, dict]:
     async for row in db.complaints.aggregate(pipeline):
         out[str(row["_id"])] = {
             "active_assigned_count": row["active_assigned_count"],
-            "critical_count": row["critical_count"],
             "high_count": row["high_count"],
             "medium_count": row["medium_count"],
             "low_count": row["low_count"],
@@ -1145,7 +1171,6 @@ async def list_department_officers(department_id: str) -> list[dict]:
             "department_name": dept.get("name") if dept else None,
             "department_code": dept.get("code") if dept else None,
             "active_assigned_count": load.get("active_assigned_count", 0),
-            "critical_count": load.get("critical_count", 0),
             "high_count": load.get("high_count", 0),
             "medium_count": load.get("medium_count", 0),
             "low_count": load.get("low_count", 0),

@@ -1,76 +1,27 @@
 import type { UserRole } from "@/types";
+import { publicStatus, PUBLIC_STATUSES } from "@/lib/complaintStatus";
 
 /** Roles that have a dedicated complaints list + filters */
 export type ComplaintFilterRole = Extract<UserRole, "citizen" | "officer" | "dept_admin" | "admin">;
 
 export type StatusFilterOption = { value: string; label: string };
 
-const CITIZEN_GROUPS: Record<string, readonly string[]> = {
-  _review: ["submitted", "ai_processing"],
-  _with_dept: ["routed_to_department", "ai_processed", "verified", "pending"],
-  _in_progress: ["assigned", "work_started", "in_progress"],
-  _finished: ["resolved", "closed", "feedback_received"],
-  _rejected: ["rejected"],
-};
-
-export function statusFilterOptions(role: ComplaintFilterRole): StatusFilterOption[] {
-  switch (role) {
-    case "citizen":
-      return [
-        { value: "", label: "All complaints" },
-        { value: "_review", label: "Under review" },
-        { value: "_with_dept", label: "With department" },
-        { value: "_in_progress", label: "Work in progress" },
-        { value: "_finished", label: "Finished" },
-      ];
-    case "officer":
-      return [
-        { value: "", label: "All assigned" },
-        { value: "assigned", label: "Newly assigned" },
-        { value: "work_started", label: "Work started" },
-        { value: "in_progress", label: "In progress" },
-        { value: "resolved", label: "Resolved" },
-        { value: "closed", label: "Closed" },
-      ];
-    case "dept_admin":
-      return [
-        { value: "", label: "All in department" },
-        { value: "routed_to_department", label: "Routed — unassigned" },
-        { value: "assigned", label: "Assigned to officer" },
-        { value: "work_started", label: "Work started" },
-        { value: "in_progress", label: "In progress" },
-        { value: "resolved", label: "Resolved" },
-        { value: "closed", label: "Closed" },
-        { value: "rejected", label: "Rejected" },
-      ];
-    case "admin":
-      return [
-        { value: "", label: "All statuses" },
-        { value: "submitted", label: "Submitted" },
-        { value: "ai_processing", label: "Under review" },
-        { value: "routed_to_department", label: "Routed to department" },
-        { value: "assigned", label: "Assigned to officer" },
-        { value: "work_started", label: "Work started" },
-        { value: "in_progress", label: "In progress" },
-        { value: "resolved", label: "Resolved" },
-        { value: "closed", label: "Closed" },
-        { value: "rejected", label: "Rejected" },
-      ];
-    default:
-      return [{ value: "", label: "All" }];
-  }
+export function statusFilterOptions(_role: ComplaintFilterRole): StatusFilterOption[] {
+  return [
+    { value: "", label: "All statuses" },
+    ...PUBLIC_STATUSES.map((item) => ({ value: item.value, label: item.label })),
+  ];
 }
 
 /** Citizen dashboard groups — filter client-side (API returns all of the user's complaints). */
 export function citizenGroupMatches(complaintStatus: string, groupValue: string): boolean {
   if (!groupValue) return true;
-  const statuses = CITIZEN_GROUPS[groupValue];
-  return statuses ? statuses.includes(complaintStatus) : complaintStatus === groupValue;
+  return publicStatus(complaintStatus) === groupValue;
 }
 
-/** Status values sent to GET /complaints (not citizen group keys). */
-export function apiStatusParam(role: ComplaintFilterRole, status: string): string | undefined {
-  if (!status || role === "citizen" || status.startsWith("_")) return undefined;
+/** Public status sent to GET /complaints. The API expands it to the matching internal statuses. */
+export function apiStatusParam(_role: ComplaintFilterRole, status: string): string | undefined {
+  if (!status) return undefined;
   return status;
 }
 

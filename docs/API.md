@@ -128,7 +128,7 @@ All authenticated endpoints require: `Authorization: Bearer <access_token>`
 | Method | Endpoint | Role | Description |
 |--------|----------|------|-------------|
 | GET | `/admin/users` | Admin | List all users |
-| GET | `/admin/users/{id}/cases` | Admin | One person's solved, current, and critical cases |
+| GET | `/admin/users/{id}/cases` | Admin, department admin | One person's solved and current complaints with labels. Department admins can open officers in their own department. |
 | POST | `/admin/users` | Admin | Create officer/admin |
 | PATCH | `/admin/users/{id}` | Admin | Update user |
 | DELETE | `/admin/users/{id}` | Admin | Deactivate user |

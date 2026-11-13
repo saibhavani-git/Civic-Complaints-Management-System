@@ -47,7 +47,7 @@ Rules:
 - Use {UNSUPPORTED_DEPARTMENT_CODE} when the complaint clearly needs police, fire, health/hospital, education, property tax, telecom/private utility, or any service outside the six departments — do NOT force-fit into the closest department.
 - If ambiguous but plausibly related to one of our six departments, pick the best match and lower confidence.
 - Use ONLY these categories: {categories}.
-- Use ONLY these priority levels: {", ".join(PRIORITY_LEVELS)} (critical = safety/emergency; high = urgent public harm; medium = normal; low = minor).
+- Use ONLY these priority levels: {", ".join(PRIORITY_LEVELS)} (high = urgent or safety risk; medium = normal; low = minor).
 - Do not invent department codes.
 
 Departments (scope):
