@@ -1,6 +1,7 @@
-# Run the Humanizr API from project venv (fixes stale Windows Store python on 8000).
+# Run the Humanizr API from the project venv.
+# Local port is 8002 (Docker Compose publishes the API on 8000).
 $ErrorActionPreference = "Stop"
-$Port = 8000
+$Port = 8002
 $Root = $PSScriptRoot
 
 Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |

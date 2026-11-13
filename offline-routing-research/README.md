@@ -5,6 +5,8 @@ Try **non-Gemini** models on a civic routing dataset.
 
 See [`ISOLATION.md`](ISOLATION.md).
 
+**How to run models and compare accuracy:** **[MODELS_RUN_AND_COMPARE.md](MODELS_RUN_AND_COMPARE.md)** ← start here for commands and benchmarks.
+
 ---
 
 ## 1. Dataset (already in repo)
@@ -26,64 +28,17 @@ python scripts/build_dataset.py
 
 ---
 
-## 2. Models you can use (without Gemini)
+## 2. Models (summary)
 
-| Model | Type | Train? | File |
-|-------|------|--------|------|
-| **Keyword router** | Rules / keyword counts | No | `algorithms/keyword_router.py` |
-| **TF-IDF + Logistic Regression** | Classic ML (main) | Yes | `scripts/train_tfidf.py` → `artifacts/department_tfidf_logreg.joblib` |
-| **TF-IDF + Linear SVC** | Classic ML | Yes | `scripts/compare_models.py` |
-| **TF-IDF + Multinomial Naive Bayes** | Classic ML | Yes | `scripts/compare_models.py` |
-| **TF-IDF + XGBoost** | Gradient boosted trees on text features | Yes | `scripts/train_xgboost.py` → `artifacts/department_tfidf_xgboost.joblib` |
+Keyword baseline, TF-IDF + (LogReg, SVC, Naive Bayes, XGBoost, **Random Forest**), and **MiniLM embeddings** (centroid + k-NN).  
+Full list, train commands, and compare workflow: **[MODELS_RUN_AND_COMPARE.md](MODELS_RUN_AND_COMPARE.md)**.
 
-**Input to all text models:** `title` + `description` (images in the dataset are for future experiments; current trainers are **text-only**).
-
-**Outputs:** predicted `department_code` (PWD, SAN, WSD, ELEC, TNT, PAR, UNSUPPORTED) and optional **priority** head (logistic regression on same features).
-
----
-
-## 3. How to run (full workflow)
-
-Use a **venv inside this folder only** (do not use the backend venv for deployment coupling — only convenience):
+Quick compare:
 
 ```powershell
 cd offline-routing-research
-python -m venv .venv
 .\.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-**Step A — dataset (skip if `data/civic_routing_v1.json` exists):**
-
-```powershell
-python scripts/build_dataset.py
-```
-
-**Step B — train default models (department + priority):**
-
-```powershell
-python scripts/train_tfidf.py
-```
-
-**Step C — compare which classic model fits best (val + holdout):**
-
-```powershell
 python scripts/compare_models.py
-```
-
-Prints accuracy / macro-F1 and writes `artifacts/model_comparison.json`.
-
-**Step D — try one complaint string:**
-
-```powershell
-python scripts/predict_cli.py "Traffic signal stuck on red near school"
-python scripts/predict_cli.py "Garbage burning in the lane" --algorithm keyword
-```
-
-**Step E — evaluate saved TF-IDF models only:**
-
-```powershell
-python scripts/evaluate.py
 ```
 
 ---
@@ -96,7 +51,8 @@ offline-routing-research/
   algorithms/        Model code (keyword, TF-IDF pipelines)
   scripts/           build, train, compare, predict, evaluate
   artifacts/         Trained .joblib + comparison JSON (generated)
-  requirements.txt   pandas, scikit-learn, joblib only
+  requirements.txt   sklearn, xgboost, sentence-transformers, …
+  MODELS_RUN_AND_COMPARE.md   Run / compare guide
 ```
 
 ---

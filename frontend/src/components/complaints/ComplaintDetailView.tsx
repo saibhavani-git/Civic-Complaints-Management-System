@@ -8,7 +8,8 @@ import { complaintDetailKey } from "@/lib/complaintQueries";
 import { useAuth } from "@/hooks/useAuth";
 import { getDashboardPath, normalizeRole } from "@/lib/utils";
 import { ComplaintMeta, ComplaintTimeline } from "@/components/complaints/ComplaintShared";
-import { OfficerActions, FeedbackForm } from "@/components/complaints/ComplaintActions";
+import { OfficerActions, DeptAdminResolveActions, FeedbackForm } from "@/components/complaints/ComplaintActions";
+import { ComplaintPhotoGrid } from "@/components/complaints/ComplaintPhotoGrid";
 import { AssignOfficerPanel } from "@/components/complaints/AssignOfficerPanel";
 import { ComplaintProgressTracker } from "@/components/complaints/ComplaintProgressTracker";
 import { MapPin, ArrowLeft, Loader2, User, Mail, Phone } from "lucide-react";
@@ -76,6 +77,10 @@ export function ComplaintDetailView({ backHref }: { backHref?: string }) {
     isStaff &&
     !complaint.assigned_officer_id &&
     assignableStatuses.has(complaint.status) &&
+    !!complaint.department_id &&
+    (role === "admin" || user?.department_id === complaint.department_id);
+  const canCloseComplaint =
+    isStaff &&
     !!complaint.department_id &&
     (role === "admin" || user?.department_id === complaint.department_id);
 
@@ -213,22 +218,27 @@ export function ComplaintDetailView({ backHref }: { backHref?: string }) {
         </DetailSection>
 
         {complaint.images?.length > 0 && (
-          <DetailSection title="Photos">
-            <div className="flex gap-3 flex-wrap">
-              {complaint.images.map((img: { url: string }, i: number) => (
-                <img
-                  key={i}
-                  src={img.url}
-                  alt={`Evidence ${i + 1}`}
-                  className="h-28 w-28 rounded-lg object-cover border"
-                />
-              ))}
-            </div>
+          <DetailSection title="Photos from citizen">
+            <p className="text-xs text-muted-foreground mb-3">Submitted with the original report — visible to staff and the reporter.</p>
+            <ComplaintPhotoGrid images={complaint.images} altPrefix="Citizen photo" />
+          </DetailSection>
+        )}
+
+        {(complaint.field_completion_images?.length ?? 0) > 0 && (
+          <DetailSection title="Photos from field work">
+            <p className="text-xs text-muted-foreground mb-3">
+              Uploaded by the assigned officer after work on site — visible to the citizen, department admin, and staff.
+            </p>
+            <ComplaintPhotoGrid images={complaint.field_completion_images!} altPrefix="Field completion" />
           </DetailSection>
         )}
 
         {isOfficer && complaint.assigned_officer_id === user?.id && (
           <OfficerActions complaint={complaint} role={role} />
+        )}
+
+        {canCloseComplaint && (
+          <DeptAdminResolveActions complaint={complaint} role={role} canManage={canCloseComplaint} />
         )}
 
         {showFeedback && <FeedbackForm complaintId={complaint.id} />}

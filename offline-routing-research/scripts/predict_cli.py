@@ -20,7 +20,7 @@ def main() -> None:
     p.add_argument("text", nargs="?", help="Complaint text")
     p.add_argument(
         "--algorithm",
-        choices=("keyword", "tfidf", "xgboost", "embedding_centroid", "embedding_knn"),
+        choices=("keyword", "tfidf", "xgboost", "random_forest", "embedding_centroid", "embedding_knn"),
         default="tfidf",
     )
     p.add_argument("--json", action="store_true")
@@ -40,6 +40,16 @@ def main() -> None:
         if not path.exists():
             raise SystemExit("Train first: python scripts/train_xgboost.py")
         r = load_xgb(path).predict_one(text)
+        out = {"department_code": r.department_code, "confidence": r.confidence, "algorithm": r.algorithm}
+    elif args.algorithm == "random_forest":
+        from algorithms.rf_router import TfidfRandomForestRouter, load
+
+        path = ARTIFACTS_DIR / "department_tfidf_random_forest.joblib"
+        if not path.exists():
+            raise SystemExit("Train first: python scripts/train_rf.py")
+        router = TfidfRandomForestRouter()
+        router.pipe = load(path)
+        r = router.predict_one(text)
         out = {"department_code": r.department_code, "confidence": r.confidence, "algorithm": r.algorithm}
     elif args.algorithm in ("embedding_centroid", "embedding_knn"):
         from algorithms.embedding_router import load as load_emb

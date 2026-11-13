@@ -21,6 +21,7 @@ from app.services.complaint_service import (
     list_complaints,
     resolve_complaint,
     submit_feedback,
+    submit_field_completion_photos,
     update_complaint_status,
 )
 
@@ -124,14 +125,37 @@ async def patch_status(
     )
 
 
+@router.post("/{complaint_id}/field-photos", response_model=ComplaintResponse)
+async def post_field_photos(
+    complaint_id: str,
+    note: Optional[str] = Form(None),
+    images: list[UploadFile] = File(...),
+    current_user: UserInDB = Depends(require_roles(Role.OFFICER)),
+):
+    role = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
+    return await submit_field_completion_photos(
+        complaint_id,
+        current_user.id,
+        images,
+        note,
+        actor_role=role,
+    )
+
+
 @router.post("/{complaint_id}/resolve", response_model=ComplaintResponse)
 async def post_resolve(
     complaint_id: str,
     data: ResolutionSchema,
-    current_user: UserInDB = Depends(require_roles(Role.OFFICER, Role.DEPT_ADMIN, Role.ADMIN)),
+    current_user: UserInDB = Depends(require_roles(Role.DEPT_ADMIN, Role.ADMIN)),
 ):
     role = current_user.role.value if hasattr(current_user.role, "value") else current_user.role
-    return await resolve_complaint(complaint_id, current_user.id, data.notes, actor_role=role)
+    return await resolve_complaint(
+        complaint_id,
+        current_user.id,
+        data.notes,
+        actor_role=role,
+        actor_department_id=current_user.department_id,
+    )
 
 
 @router.post("/{complaint_id}/feedback")

@@ -1,10 +1,13 @@
-# Offline models (not Gemini)
+# Offline model code
 
-| Name | Algorithm | When to use |
-|------|-----------|-------------|
-| `keyword_router.py` | Keyword scoring | Fast baseline, no training |
-| `tfidf_router.py` | TF-IDF + LogisticRegression | Default ML router after `train_tfidf.py` |
+| File | Algorithm |
+|------|-----------|
+| `keyword_router.py` | Rule / keyword scoring (no training) |
+| `tfidf_router.py` | TF-IDF + Logistic Regression pipeline |
+| `xgb_router.py` | TF-IDF + XGBoost |
+| `rf_router.py` | TF-IDF + Random Forest |
+| `embedding_router.py` | MiniLM + centroid or k-NN |
 
-Run **`python scripts/compare_models.py`** to see how Logistic Regression, Linear SVC, and Multinomial Naive Bayes compare on your splits.
+**Run and compare everything:** [../MODELS_RUN_AND_COMPARE.md](../MODELS_RUN_AND_COMPARE.md)
 
-Production Humanizr: **Gemini only** (outside this folder).
+Production Humanizr routing: **Gemini only** (outside this folder).

@@ -27,4 +27,4 @@ Images in the dataset are **not** used by current trainers (text-only). You can 
 
 ## Commands
 
-See [README.md](README.md) sections 2–3.
+See **[MODELS_RUN_AND_COMPARE.md](MODELS_RUN_AND_COMPARE.md)** for setup, `compare_models.py`, paraphrase eval, and `predict_cli.py`.

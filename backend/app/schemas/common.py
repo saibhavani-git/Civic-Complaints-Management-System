@@ -48,7 +48,6 @@ class NotificationResponse(BaseModel):
 
 class AnalyticsOverview(BaseModel):
     total_complaints: int
-    pending: int
     in_progress: int
     resolved: int
     avg_resolution_hours: float

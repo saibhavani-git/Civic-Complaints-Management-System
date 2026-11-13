@@ -3,9 +3,12 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import admin, analytics, audit, auth, clusters, complaints, events, internal, notifications, staff
 from app.config import get_settings
@@ -70,6 +73,11 @@ def create_app() -> FastAPI:
     app.include_router(staff.router, prefix="/api/v1")
     app.include_router(internal.router, prefix="/api/v1")
     app.include_router(events.router, prefix="/api/v1")
+
+    uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=str(uploads_dir)), name="uploads")
+
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
         logging.getLogger(__name__).exception("Unhandled error on %s", request.url.path)

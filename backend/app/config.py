@@ -35,7 +35,9 @@ class Settings(BaseSettings):
     MAX_IMAGES_PER_COMPLAINT: int = 5
 
     AI_SERVICE_URL: str = ""
-    BACKEND_URL: str = "http://127.0.0.1:8000"
+    # Local npm start listens on 8002. Docker Compose publishes the API on 8000.
+    BACKEND_URL: str = "http://127.0.0.1:8002"
+    PUBLIC_API_URL: str = "http://127.0.0.1:8002"
     REDIS_URL: str = "redis://127.0.0.1:6380"
     QUEUE_SERVICE_URL: str = "http://127.0.0.1:3030"
     COMPLAINT_AI_QUEUE_NAME: str = "complaint-ai"

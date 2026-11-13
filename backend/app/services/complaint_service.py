@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 
 import cloudinary
 import cloudinary.uploader
@@ -10,7 +11,7 @@ from fastapi import HTTPException, UploadFile, status
 from app.integrations.ai_client import run_ai_pipeline
 from app.services.blockchain_service import append_audit_block
 from app.services.cluster_service import refresh_clusters_for_location
-from app.config import get_settings
+from app.config import _BACKEND_DIR, get_settings
 from app.db.database import get_database
 from app.schemas.complaint import ComplaintCreate, ComplaintResponse, ComplaintStatus, Priority
 from app.services.notification_service import create_notification
@@ -334,15 +335,25 @@ async def _generate_complaint_id() -> str:
     return f"HMN-{year}-{count + 1:05d}"
 
 
-async def _upload_images(images: list[UploadFile]) -> list[dict]:
+def _public_api_base() -> str:
     settings = get_settings()
+    base = (settings.PUBLIC_API_URL or settings.BACKEND_URL or "http://127.0.0.1:8002").rstrip("/")
+    return base
+
+
+def _upload_root() -> Path:
+    root = _BACKEND_DIR / "uploads" / "civic_complaints"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+async def _upload_images_cloudinary(images: list[UploadFile]) -> list[dict]:
     if not _cloudinary_ready():
-        logger.warning("Cloudinary not configured or invalid; skipping image upload")
         return []
 
+    settings = get_settings()
     _configure_cloudinary()
     uploaded = []
-
     allowed_ext = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif")
 
     for image in images[: settings.MAX_IMAGES_PER_COMPLAINT]:
@@ -371,9 +382,58 @@ async def _upload_images(images: list[UploadFile]) -> list[dict]:
                 "uploaded_at": datetime.now(timezone.utc),
             })
         except Exception as exc:
-            # Do not fail the whole complaint — citizen report is more important than photos
             logger.error("Cloudinary upload failed for %s: %s", image.filename, exc)
     return uploaded
+
+
+async def _upload_images_local(images: list[UploadFile]) -> list[dict]:
+    import uuid
+
+    settings = get_settings()
+    uploaded = []
+    allowed_ext = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif", ".svg")
+    root = _upload_root()
+    base = _public_api_base()
+
+    for image in images[: settings.MAX_IMAGES_PER_COMPLAINT]:
+        content_type = (image.content_type or "").lower()
+        filename = (image.filename or "").lower()
+        is_image = content_type.startswith("image/") or any(filename.endswith(ext) for ext in allowed_ext)
+        if not is_image:
+            logger.warning("Skipping non-image upload: %s (%s)", image.filename, content_type)
+            continue
+
+        content = await image.read()
+        if not content:
+            continue
+        if len(content) > settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+            logger.warning("Skipping oversized image: %s", image.filename)
+            continue
+
+        ext = Path(filename).suffix if any(filename.endswith(e) for e in allowed_ext) else ".jpg"
+        if not ext:
+            ext = ".jpg"
+        stored = f"{uuid.uuid4().hex}{ext}"
+        path = root / stored
+        path.write_bytes(content)
+        uploaded.append({
+            "url": f"{base}/uploads/civic_complaints/{stored}",
+            "public_id": f"local/civic_complaints/{stored}",
+            "uploaded_at": datetime.now(timezone.utc),
+        })
+    return uploaded
+
+
+async def _upload_images(images: list[UploadFile]) -> list[dict]:
+    cloud = await _upload_images_cloudinary(images)
+    if cloud:
+        return cloud
+    local = await _upload_images_local(images)
+    if local:
+        logger.info("Stored %s image(s) on local disk (Cloudinary unavailable)", len(local))
+    elif images:
+        logger.warning("No images stored — check file type/size or Cloudinary config")
+    return local
 
 
 async def _notify_department_admins_new_complaint(
@@ -845,6 +905,7 @@ async def _format_complaint(doc: dict, *, role: str | None = None) -> ComplaintR
         title=doc["title"],
         description=doc["description"],
         images=_sanitize_images(doc.get("images")),
+        field_completion_images=_sanitize_images(doc.get("field_completion_images")),
         location=doc.get("location") or {},
         status=_coerce_status(doc.get("status")),
         priority=_coerce_priority(doc.get("priority")),
@@ -1156,18 +1217,104 @@ async def update_complaint_status(
     return await get_complaint_by_id(complaint_id, role=actor_role)
 
 
+_ACTIVE_FIELD_STATUSES = frozenset(
+    {
+        ComplaintStatus.ASSIGNED.value,
+        ComplaintStatus.WORK_STARTED.value,
+        ComplaintStatus.IN_PROGRESS.value,
+    }
+)
+
+
+async def submit_field_completion_photos(
+    complaint_id: str,
+    officer_id: str,
+    images: list,
+    note: str | None = None,
+    *,
+    actor_role: str | None = None,
+) -> ComplaintResponse:
+    db = get_database()
+    complaint = await db.complaints.find_one({"_id": ObjectId(complaint_id)})
+    if not complaint:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+    if not _ids_equal(complaint.get("assigned_officer_id"), officer_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not assigned to this complaint")
+    if complaint.get("status") not in _ACTIVE_FIELD_STATUSES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Photos can only be added while field work is active",
+        )
+
+    uploaded = await _upload_images(images or [])
+    if not uploaded:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Upload at least one image")
+
+    now = datetime.now(timezone.utc)
+    for img in uploaded:
+        img["uploaded_by"] = ObjectId(officer_id)
+
+    officer_note = (note or "").strip()
+    history_note = officer_note or "Completion photos submitted for department review."
+    await db.complaints.update_one(
+        {"_id": ObjectId(complaint_id)},
+        {
+            "$push": {
+                "field_completion_images": {"$each": uploaded},
+                "status_history": {
+                    "status": ComplaintStatus.WORK_COMPLETED.value,
+                    "changed_by": ObjectId(officer_id),
+                    "changed_at": now,
+                    "note": history_note,
+                },
+            },
+            "$set": {"updated_at": now},
+        },
+    )
+
+    await _notify_citizen_tracking(
+        citizen_id=str(complaint["citizen_id"]),
+        complaint_number=complaint["complaint_id"],
+        complaint_oid=complaint_id,
+        status=complaint.get("status", ComplaintStatus.IN_PROGRESS.value),
+        extra="Work completed on site — awaiting department confirmation.",
+    )
+
+    return await get_complaint_by_id(complaint_id, role=actor_role)
+
+
 async def resolve_complaint(
     complaint_id: str,
     user_id: str,
     notes: str,
     *,
     actor_role: str | None = None,
+    actor_department_id: str | None = None,
 ) -> ComplaintResponse:
     db = get_database()
     now = datetime.now(timezone.utc)
 
     complaint_before = await db.complaints.find_one({"_id": ObjectId(complaint_id)})
-    old_status = complaint_before.get("status") if complaint_before else None
+    if not complaint_before:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    role = _normalize_role(actor_role)
+    if role == "dept_admin":
+        if not actor_department_id or not complaint_before.get("department_id"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not allowed")
+        if str(complaint_before["department_id"]) != actor_department_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your department")
+    elif role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only department admin can mark finished")
+
+    proof = _sanitize_images(complaint_before.get("field_completion_images"))
+    if not proof:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Officer must upload field completion photos before this can be marked finished",
+        )
+
+    old_status = complaint_before.get("status")
 
     await db.complaints.update_one(
         {"_id": ObjectId(complaint_id)},
@@ -1179,6 +1326,7 @@ async def resolve_complaint(
                     "notes": notes,
                     "resolved_at": now,
                     "resolved_by": ObjectId(user_id),
+                    "proof_images": proof,
                 },
             },
             "$push": {

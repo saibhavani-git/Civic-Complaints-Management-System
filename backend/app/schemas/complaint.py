@@ -13,6 +13,7 @@ class ComplaintStatus(str, Enum):
     VERIFIED = "verified"
     ASSIGNED = "assigned"
     WORK_STARTED = "work_started"
+    WORK_COMPLETED = "work_completed"  # timeline: officer submitted completion photos
     RESOLVED = "resolved"
     FEEDBACK_RECEIVED = "feedback_received"
     # Legacy values kept for existing records
@@ -86,6 +87,7 @@ class ComplaintResponse(BaseModel):
     title: str
     description: str
     images: list[ImageSchema] = []
+    field_completion_images: list[ImageSchema] = []
     location: dict
     status: ComplaintStatus
     priority: Priority

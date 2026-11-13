@@ -68,20 +68,22 @@ function DashboardContent() {
 
 
 
+  const inProgressStatuses = [
+    "pending",
+    "submitted",
+    "ai_processing",
+    "routed_to_department",
+    "ai_processed",
+    "verified",
+    "assigned",
+    "work_started",
+    "in_progress",
+  ] as const;
+
   const stats = {
-
     total: data?.total || 0,
-
-    pending: allComplaints.filter((c) =>
-      ["submitted", "ai_processing", "routed_to_department", "ai_processed", "pending"].includes(c.status)
-    ).length,
-
-    inProgress: allComplaints.filter((c) =>
-      ["assigned", "work_started", "in_progress"].includes(c.status)
-    ).length,
-
+    inProgress: allComplaints.filter((c) => (inProgressStatuses as readonly string[]).includes(c.status)).length,
     resolved: allComplaints.filter((c) => ["resolved", "closed"].includes(c.status)).length,
-
   };
 
 
@@ -148,16 +150,10 @@ function DashboardContent() {
 
 
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard label="Total" value={stats.total} icon={FileText} />
-
-        <StatCard label="Pending" value={stats.pending} icon={Clock} iconClassName="bg-amber-50 [&>svg]:text-amber-600" />
-
-        <StatCard label="In Progress" value={stats.inProgress} icon={Clock} iconClassName="bg-orange-50 [&>svg]:text-orange-600" />
-
+        <StatCard label="In progress" value={stats.inProgress} icon={Clock} iconClassName="bg-orange-50 [&>svg]:text-orange-600" />
         <StatCard label="Resolved" value={stats.resolved} icon={CheckCircle} iconClassName="bg-emerald-50 [&>svg]:text-emerald-600" />
-
       </div>
 
       {allComplaints.length > 0 && (

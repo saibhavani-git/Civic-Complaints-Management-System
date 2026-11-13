@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { StaffRow } from "@/components/admin/people/types";
 import { fieldAreaTextClassName } from "@/lib/staffDisplay";
 import { cn } from "@/lib/utils";
@@ -47,13 +49,16 @@ export function PersonTable({
           {showStatus && (
             <th className="px-5 py-3 text-left font-medium text-muted-foreground">Status</th>
           )}
+          <th className="px-5 py-3 text-right font-medium text-muted-foreground"> </th>
         </tr>
       </thead>
       <tbody>
         {rows.map((u) => (
           <tr key={u.id} className="border-b last:border-0 hover:bg-muted/20">
             <td className="px-5 py-3.5">
-              <div className="font-medium">{u.full_name}</div>
+              <Link href={`/admin/staff/people/${u.id}`} className="font-medium hover:text-primary">
+                {u.full_name}
+              </Link>
               {!showFieldArea && u.service_area && (
                 <div className={cn("text-xs text-muted-foreground mt-0.5", fieldAreaTextClassName)}>
                   {u.service_area}
@@ -89,6 +94,11 @@ export function PersonTable({
                 </Badge>
               </td>
             )}
+            <td className="px-5 py-3.5 text-right">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`/admin/staff/people/${u.id}`}>View</Link>
+              </Button>
+            </td>
           </tr>
         ))}
       </tbody>

@@ -17,6 +17,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 
 from algorithms.embedding_router import EmbeddingKNNRouter  # noqa: E402
+from algorithms.rf_router import TfidfRandomForestRouter  # noqa: E402
 from scripts._paths import ARTIFACTS_DIR, DATA_DIR  # noqa: E402
 
 WORD_RE = re.compile(r"[a-z]{3,}")
@@ -115,6 +116,10 @@ def main() -> None:
     print("Training TF-IDF + LogisticRegression on ORR train split...")
     tfidf = _train_tfidf(X_train, y_train)
 
+    print("Training TF-IDF + Random Forest on ORR train split...")
+    rf = TfidfRandomForestRouter()
+    rf.fit(X_train, y_train)
+
     print("Training embedding k-NN (MiniLM, k=5) on ORR train split...")
     knn = EmbeddingKNNRouter(k=5)
     knn.fit(X_train, y_train)
@@ -142,11 +147,14 @@ def main() -> None:
 
     for split_name, (recs, texts, truth) in sets.items():
         tfidf_pred = list(tfidf.predict(texts))
+        rf_pred = rf.predict(texts)
         knn_pred = knn.predict_batch(texts)
         report["evaluations"][split_name] = {
             "tfidf_logistic_regression": _metrics("tfidf_logistic_regression", truth, tfidf_pred),
+            "tfidf_random_forest": _metrics("tfidf_random_forest", truth, rf_pred),
             "embedding_knn5_minilm": _metrics("embedding_knn5_minilm", truth, knn_pred),
             "tfidf_errors": _misclassified(recs, truth, tfidf_pred),
+            "rf_errors": _misclassified(recs, truth, rf_pred),
             "knn_errors": _misclassified(recs, truth, knn_pred),
         }
         if split_name == "paraphrase_oov_v1":
@@ -163,17 +171,21 @@ def main() -> None:
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
     print("\n=== Accuracy (department routing) ===")
-    print(f"{'Split':<28} {'TF-IDF+LR':>12} {'Emb k-NN':>12}")
-    print("-" * 54)
+    print(f"{'Split':<28} {'TF-IDF+LR':>11} {'TF-IDF+RF':>11} {'Emb k-NN':>11}")
+    print("-" * 65)
     for split_name in sets:
         ev = report["evaluations"][split_name]
         ta = ev["tfidf_logistic_regression"]["accuracy"] * 100
+        ra = ev["tfidf_random_forest"]["accuracy"] * 100
         ka = ev["embedding_knn5_minilm"]["accuracy"] * 100
-        print(f"{split_name:<28} {ta:11.2f}% {ka:11.2f}%")
+        print(f"{split_name:<28} {ta:10.2f}% {ra:10.2f}% {ka:10.2f}%")
 
     oov_ev = report["evaluations"]["paraphrase_oov_v1"]
-    print(f"\nParaphrase macro-F1: TF-IDF {oov_ev['tfidf_logistic_regression']['macro_f1']:.2%}  "
-          f"| k-NN {oov_ev['embedding_knn5_minilm']['macro_f1']:.2%}")
+    print(
+        f"\nParaphrase macro-F1: TF-IDF LR {oov_ev['tfidf_logistic_regression']['macro_f1']:.2%}  "
+        f"| RF {oov_ev['tfidf_random_forest']['macro_f1']:.2%}  "
+        f"| k-NN {oov_ev['embedding_knn5_minilm']['macro_f1']:.2%}"
+    )
     print(f"\nSaved -> {out}")
     if oov_ev["tfidf_errors"]:
         print("\nSample TF-IDF mistakes (first 5):")

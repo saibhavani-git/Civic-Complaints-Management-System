@@ -313,6 +313,96 @@ DEMO_USERS = [
     },
 ]
 
+# Served by Next.js from frontend/public/seed-complaint-images/
+SEED_IMAGE_BASE_URL = "http://localhost:3000/seed-complaint-images"
+
+# Real demo photos in frontend/public/seed-complaint-images/ (see seed script copy step in README)
+_CATEGORY_CITIZEN_IMAGE: dict[str, str] = {
+    "garbage": "citizen-san-waste.jpg",
+    "road_damage": "citizen-pothole.jpg",
+    "water": "citizen-road-damage.jpg",
+    "electricity": "citizen-electrical.jpg",
+    "traffic": "citizen-traffic-day.jpg",
+    "parks": "citizen-park-broken.jpg",
+    "other": "citizen-park-litter.jpg",
+}
+
+_CATEGORY_FIELD_IMAGE: dict[str, str] = {
+    "garbage": "field-cleanup.jpg",
+    "road_damage": "field-cleanup.jpg",
+    "water": "field-cleanup.jpg",
+    "electricity": "field-electrical.jpg",
+    "traffic": "field-signal-fixed.jpg",
+    "parks": "field-cleanup.jpg",
+    "other": "field-cleanup.jpg",
+}
+
+_DEPT_CODE_CITIZEN_IMAGE: dict[str, str] = {
+    "SAN": "citizen-san-waste.jpg",
+    "PWD": "citizen-pothole.jpg",
+    "WSD": "citizen-road-damage.jpg",
+    "ELEC": "citizen-electrical.jpg",
+    "TNT": "citizen-traffic-day.jpg",
+    "PAR": "citizen-park-broken.jpg",
+}
+
+_STATUSES_WITH_FIELD_PHOTOS = frozenset(
+    {
+        ComplaintStatus.WORK_STARTED.value,
+        ComplaintStatus.IN_PROGRESS.value,
+        ComplaintStatus.RESOLVED.value,
+    }
+)
+
+
+def _seed_image_doc(filename: str, *, uploaded_at: datetime, public_prefix: str, uploaded_by: ObjectId | None = None) -> dict:
+    doc = {
+        "url": f"{SEED_IMAGE_BASE_URL}/{filename}",
+        "public_id": f"{public_prefix}/{filename}",
+        "uploaded_at": uploaded_at,
+    }
+    if uploaded_by is not None:
+        doc["uploaded_by"] = uploaded_by
+    return doc
+
+
+def _citizen_image_filename(spec: dict) -> str:
+    dept = spec.get("department_code")
+    if dept and dept in _DEPT_CODE_CITIZEN_IMAGE:
+        return _DEPT_CODE_CITIZEN_IMAGE[dept]
+    category = spec.get("category") or "other"
+    return _CATEGORY_CITIZEN_IMAGE.get(category, "citizen-park-litter.jpg")
+
+
+def _field_image_filename(spec: dict) -> str:
+    category = spec.get("category") or "other"
+    dept = spec.get("department_code")
+    if dept == "TNT":
+        return "field-signal-fixed.jpg"
+    if dept == "ELEC":
+        return "field-electrical.jpg"
+    return _CATEGORY_FIELD_IMAGE.get(category, "field-cleanup.jpg")
+
+
+def _citizen_images_for_complaint(spec: dict, created_at: datetime) -> list[dict]:
+    fname = _citizen_image_filename(spec)
+    return [_seed_image_doc(fname, uploaded_at=created_at, public_prefix="seed/citizen")]
+
+
+def _field_images_for_complaint(spec: dict, officer_oid: ObjectId | None, updated_at: datetime) -> list[dict]:
+    if not officer_oid or spec["status"] not in _STATUSES_WITH_FIELD_PHOTOS:
+        return []
+    fname = _field_image_filename(spec)
+    return [
+        _seed_image_doc(
+            fname,
+            uploaded_at=updated_at - timedelta(hours=2),
+            public_prefix="seed/field",
+            uploaded_by=officer_oid,
+        )
+    ]
+
+
 # seed_key must be unique; used for upsert.
 DEMO_COMPLAINTS = [
     {
@@ -668,13 +758,18 @@ async def _upsert_complaints(db, users_by_email: dict[str, dict], dept_by_code: 
                 "predicted_priority": spec["priority"],
             }
 
+        created_at = now - timedelta(days=3)
+        citizen_images = _citizen_images_for_complaint(spec, created_at)
+        field_images = _field_images_for_complaint(spec, officer_oid, now)
+
         doc = {
             "seed_key": spec["seed_key"],
             "complaint_id": complaint_number,
             "citizen_id": citizen_oid,
             "title": spec["title"],
             "description": spec["description"],
-            "images": [],
+            "images": citizen_images,
+            "field_completion_images": field_images,
             "location": {
                 "type": "Point",
                 "coordinates": spec["coordinates"],
@@ -688,12 +783,13 @@ async def _upsert_complaints(db, users_by_email: dict[str, dict], dept_by_code: 
             "ai_metadata": ai_meta,
             "status_history": _status_history(spec["status"], citizen_oid, now),
             "updated_at": now,
-            "created_at": now - timedelta(days=3),
+            "created_at": created_at,
         }
         if spec.get("resolution_notes"):
             doc["resolution"] = {
                 "notes": spec["resolution_notes"],
                 "resolved_at": now - timedelta(days=1),
+                "proof_images": field_images,
             }
 
         existing = await db.complaints.find_one({"seed_key": spec["seed_key"]})
@@ -703,6 +799,52 @@ async def _upsert_complaints(db, users_by_email: dict[str, dict], dept_by_code: 
         else:
             await db.complaints.insert_one(doc)
             print(f"  Created complaint {complaint_number} ({spec['status']})")
+
+
+async def _backfill_complaint_images(db, dept_by_code: dict[str, ObjectId], now: datetime) -> None:
+    """Apply demo photo URLs to every complaint (citizen + officer completion where applicable)."""
+    code_by_dept_id = {str(v): k for k, v in dept_by_code.items()}
+    dept_default_category = {
+        "SAN": "garbage",
+        "PWD": "road_damage",
+        "WSD": "water",
+        "ELEC": "electricity",
+        "TNT": "traffic",
+        "PAR": "parks",
+    }
+    updated = 0
+    async for row in db.complaints.find({}):
+        created = row.get("created_at") or now
+        dept_code = code_by_dept_id.get(str(row["department_id"])) if row.get("department_id") else None
+        category = row.get("category")
+        if not category and dept_code:
+            category = dept_default_category.get(dept_code, "other")
+        category = category or "other"
+
+        img_spec = {"category": category, "department_code": dept_code}
+        patch: dict = {
+            "images": _citizen_images_for_complaint(img_spec, created),
+        }
+
+        officer_oid = row.get("assigned_officer_id")
+        status = row.get("status")
+        if officer_oid and status in _STATUSES_WITH_FIELD_PHOTOS:
+            field_spec = {**img_spec, "status": status}
+            patch["field_completion_images"] = _field_images_for_complaint(
+                field_spec,
+                officer_oid,
+                row.get("updated_at") or now,
+            )
+            if status == ComplaintStatus.RESOLVED.value and row.get("resolution") and isinstance(row["resolution"], dict):
+                res = dict(row["resolution"])
+                res["proof_images"] = patch["field_completion_images"]
+                patch["resolution"] = res
+
+        patch["updated_at"] = row.get("updated_at") or now
+        await db.complaints.update_one({"_id": row["_id"]}, {"$set": patch})
+        updated += 1
+    if updated:
+        print(f"\n  Refreshed demo photos on {updated} complaint(s)")
 
 
 async def seed_all() -> None:
@@ -725,6 +867,9 @@ async def seed_all() -> None:
 
     print("\nSeeding complaints…")
     await _upsert_complaints(db, users, dept_by_code, now)
+
+    print("\nBackfilling complaint photos (citizen + officer demo URLs)…")
+    await _backfill_complaint_images(db, dept_by_code, now)
 
     total_c = await db.complaints.count_documents({})
     total_u = await db.users.count_documents({})

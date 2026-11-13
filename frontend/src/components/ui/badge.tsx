@@ -51,6 +51,7 @@ export function StatusBadge({
     assigned: "info",
     work_started: "warning",
     in_progress: "warning",
+    work_completed: "success",
     resolved: "success",
     feedback_received: "success",
     closed: "muted",

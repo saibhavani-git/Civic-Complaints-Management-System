@@ -30,6 +30,7 @@ export const STATUS_LABELS: Record<string, string> = {
   assigned: "Worker assigned",
   work_started: "Work in progress",
   in_progress: "Work in progress",
+  work_completed: "Work completed",
   resolved: "Finished",
   closed: "Finished",
   feedback_received: "Finished",

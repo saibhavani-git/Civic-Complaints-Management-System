@@ -37,7 +37,9 @@ ai/         → Optional split AI service (docker profile `ai-split`)
 
 ## How to start (local development)
 
-Use **four terminals** (or background processes). The frontend and queue are configured for the API on **port 8002** — keep that port unless you change env files everywhere.
+Short version: **[docs/HOW_TO_RUN.md](docs/HOW_TO_RUN.md)**.
+
+Local ports stay fixed: web **3000**, API **8002**, queue **3030**, Redis **6380**. Docker Compose publishes the API on **8000** — use one mode at a time, and point `NEXT_PUBLIC_API_URL` at the API you actually started.
 
 ### Prerequisites
 
@@ -83,6 +85,17 @@ Legacy minimal users only: `python scripts\seed_roles.py`
 
 ### Every time you run the app
 
+**One command** (from repo root — starts Redis in Docker, then opens three windows for API, queue, and frontend):
+
+```powershell
+npm start
+```
+
+Same thing: `.\start.ps1` or `.\scripts\start-local.ps1`. **Docker Desktop** must be running first. The API window can take **1–2 minutes** on first boot (ML libs); wait for `Application startup complete`, then open http://localhost:3000.
+
+<details>
+<summary>Manual four-terminal setup (optional)</summary>
+
 **Terminal 1 — Redis** (skip if `humanizr-redis` is already running)
 
 ```powershell
@@ -96,16 +109,12 @@ cd backend
 .\venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8002 --reload
 ```
 
-First startup can take 1–2 minutes while Python loads ML dependencies; wait until you see `Application startup complete`.
-
-**Terminal 3 — Queue worker** (processes new complaints after submit)
+**Terminal 3 — Queue**
 
 ```powershell
 cd queue
 npm run dev
 ```
-
-You should see: `Queue service listening on http://127.0.0.1:3030`.
 
 **Terminal 4 — Frontend**
 
@@ -113,6 +122,8 @@ You should see: `Queue service listening on http://127.0.0.1:3030`.
 cd frontend
 npm run dev
 ```
+
+</details>
 
 ### URLs
 
@@ -135,7 +146,7 @@ Expect `status: healthy` and `db: connected`.
 
 - **Frontend “Cannot reach API”** — API must be on **8002** and `frontend/.env.local` must match; restart `npm run dev` after env changes.
 - **Complaints stuck on Submitted** — start Redis (6380) and the **queue** worker; `queue/.env` `BACKEND_URL` must be `http://127.0.0.1:8002`.
-- **Old API on 8000** — stop extra uvicorn processes; only run the **8002** instance above.
+- **Wrong API port** — local `npm start` and `backend/start-api.ps1` use **8002**. Docker Compose publishes the API on **8000**. `frontend/.env.local` must match the one you started.
 - **Port in use** — stop the process using 8002/3000/3030 or change ports consistently in env files.
 
 **Complaint flow:** citizen submits → **Submitted** → BullMQ job → review/routing → **routed to department** → dept admin assigns officer.
@@ -150,37 +161,125 @@ docker compose --profile ai-split up -d
 
 ### Demo logins (local dev)
 
-Run `python scripts/seed_demo_data.py` — it prints the full account list grouped by role.
+Create accounts and sample complaints (after MongoDB is reachable):
 
-**Convention:** municipal staff use **firstname.lastname@civic.gov.in**; **residents use personal email** (Gmail, Yahoo, Outlook), not `@civic.gov.in`.
+```powershell
+cd backend
+.\venv\Scripts\activate
+python scripts\seed_demo_data.py
+```
 
-| Role | Example people (password) |
-|------|---------------------------|
-| **System admin** | Arjun Malhotra, Nisha Rao (`Admin@123`) |
-| **Dept admin** | Meera Iyer (SAN), Karan Singh (PWD), Rohit Banerjee (WSD), … (`DeptAdmin@123`) |
-| **Officer** | Ravi Kumar (SAN), Imran Sheikh (PWD), Farhan Ali (ELEC), … (`Officer@123`) |
-| **Citizen** | Priya Sharma, Rahul Mehta, Sai Bhavani Kokanti, … (`Citizen@123`) |
+**Login URL:** http://localhost:3000/login — staff and citizens use the same page; the app sends you to the portal for your role.
 
-Examples to log in quickly:
+**Passwords (seed script only — not for production):**
 
-- Citizen: `priya.sharma@gmail.com` / `Citizen@123`
-- SAN dept admin: `meera.iyer@civic.gov.in` / `DeptAdmin@123`
-- SAN officer: `ravi.kumar@civic.gov.in` / `Officer@123`
-- System admin: `arjun.malhotra@civic.gov.in` / `Admin@123`
+| Role | Password |
+|------|----------|
+| System administrator | `Admin@123` |
+| Department administrator | `DeptAdmin@123` |
+| Field officer | `Officer@123` |
+| Citizen (resident) | `Citizen@123` |
 
-Sample complaints cover **submitted**, **routed**, **assigned**, **in progress**, **resolved**, and **not on portal** (rejected) states.
+**Email convention:** municipal staff → `firstname.lastname@civic.gov.in`; residents → personal email (Gmail, Yahoo, Outlook), not `@civic.gov.in`.
 
-Notifications for every role use the **header bell** only.
+#### Municipal departments (AI routing targets)
 
-**Accounts**
+| Code | Department |
+|------|------------|
+| PWD | Public Works Department |
+| SAN | Sanitation Department |
+| WSD | Water Supply Department |
+| ELEC | Electricity Department |
+| TNT | Traffic & Transport |
+| PAR | Parks & Recreation |
+
+#### System administrators (city-wide)
+
+| Name | Email | Password |
+|------|-------|----------|
+| Arjun Malhotra | arjun.malhotra@civic.gov.in | Admin@123 |
+| Nisha Rao | nisha.rao@civic.gov.in | Admin@123 |
+
+#### Department administrators and field officers (by department)
+
+**SAN — Sanitation**
+
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Dept admin | Meera Iyer | meera.iyer@civic.gov.in | DeptAdmin@123 |
+| Dept admin | Vikram Desai | vikram.desai@civic.gov.in | DeptAdmin@123 |
+| Officer | Ravi Kumar | ravi.kumar@civic.gov.in | Officer@123 |
+| Officer | Lakshmi Nair | lakshmi.nair@civic.gov.in | Officer@123 |
+
+**PWD — Public Works**
+
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Dept admin | Karan Singh | karan.singh@civic.gov.in | DeptAdmin@123 |
+| Dept admin | Anita Khurana | anita.khurana@civic.gov.in | DeptAdmin@123 |
+| Officer | Imran Sheikh | imran.sheikh@civic.gov.in | Officer@123 |
+| Officer | Deepa Joshi | deepa.joshi@civic.gov.in | Officer@123 |
+
+**WSD — Water Supply**
+
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Dept admin | Rohit Banerjee | rohit.banerjee@civic.gov.in | DeptAdmin@123 |
+| Dept admin | Manish Gupta | manish.gupta@civic.gov.in | DeptAdmin@123 |
+| Officer | Mohit Agarwal | mohit.agarwal@civic.gov.in | Officer@123 |
+| Officer | Naveen Reddy | naveen.reddy@civic.gov.in | Officer@123 |
+
+**ELEC — Electricity**
+
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Dept admin | Sunita Pillai | sunita.pillai@civic.gov.in | DeptAdmin@123 |
+| Dept admin | Pooja Saxena | pooja.saxena@civic.gov.in | DeptAdmin@123 |
+| Officer | Farhan Ali | farhan.ali@civic.gov.in | Officer@123 |
+| Officer | Shreya Bhatia | shreya.bhatia@civic.gov.in | Officer@123 |
+
+**TNT — Traffic & Transport**
+
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Dept admin | Aditya Venkatesh | aditya.venkatesh@civic.gov.in | DeptAdmin@123 |
+| Dept admin | Kavita Menon | kavita.menon@civic.gov.in | DeptAdmin@123 |
+| Officer | Sanjay Rawat | sanjay.rawat@civic.gov.in | Officer@123 |
+| Officer | Preeti Gautam | preeti.gautam@civic.gov.in | Officer@123 |
+
+**PAR — Parks & Recreation**
+
+| Role | Name | Email | Password |
+|------|------|-------|----------|
+| Dept admin | Gaurav Mehta | gaurav.mehta@civic.gov.in | DeptAdmin@123 |
+| Dept admin | Leela Rajan | leela.rajan@civic.gov.in | DeptAdmin@123 |
+| Officer | Anjali Deshmukh | anjali.deshmukh@civic.gov.in | Officer@123 |
+| Officer | Harish Patel | harish.patel@civic.gov.in | Officer@123 |
+
+#### Citizens (residents)
+
+| Name | Email | Password |
+|------|-------|----------|
+| Priya Sharma | priya.sharma@gmail.com | Citizen@123 |
+| Rahul Mehta | rahul.mehta88@yahoo.com | Citizen@123 |
+| Amit Verma | amit.verma@outlook.com | Citizen@123 |
+| Neha Kapoor | neha.kapoor@gmail.com | Citizen@123 |
+
+New residents can also [sign up](http://localhost:3000/sign-in) with any email; seeded citizens above are for demos and sample complaints.
+
+#### Sample data notes
+
+Seeded complaints span **submitted**, **routed**, **assigned**, **in progress**, **resolved**, and **rejected** (unsupported / not on portal). Notifications for every role use the **header bell** only.
+
+#### Who can create which accounts
 
 | Who | How they get an account |
 |-----|-------------------------|
-| **Residents (citizens)** | [Sign in](http://localhost:3000/sign-in) once to create an account, then [log in](http://localhost:3000/login) on later visits |
+| **Residents** | Self [sign-in](http://localhost:3000/sign-in) or use a seeded citizen above |
 | **Officers** | Department admin → **Field team**, or system admin → **Staff** |
-| **Department admins & system admin** | System admin → **Staff** only |
+| **Department admins & system admins** | System admin → **Staff** only |
 
-Staff and residents share one **log in** page; after authentication you are sent to the portal for your role.
+Source of truth for adding users: `backend/scripts/seed_demo_data.py` (`DEMO_USERS`).
 
 ## Documentation
 

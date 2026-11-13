@@ -2,12 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { analyticsApi } from "@/lib/api";
-import { DashboardCharts } from "@/components/analytics/DashboardCharts";
 import { PageHeader, StatCard } from "@/components/layout/PageHeader";
 import { useAuth } from "@/hooks/useAuth";
 import { normalizeRole } from "@/lib/roles";
 import Link from "next/link";
-import { BarChart3, Clock, CheckCircle, AlertTriangle, Loader2, ClipboardList } from "lucide-react";
+import { BarChart3, Clock, CheckCircle, Loader2, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function AdminDashboard() {
@@ -18,17 +17,6 @@ export default function AdminDashboard() {
   const { data: overview, isLoading } = useQuery({
     queryKey: ["analytics-overview"],
     queryFn: () => analyticsApi.overview().then((r) => r.data),
-  });
-
-  const { data: deptData } = useQuery({
-    queryKey: ["analytics-dept"],
-    queryFn: () => analyticsApi.byDepartment().then((r) => r.data),
-    enabled: isSystemAdmin,
-  });
-
-  const { data: trends } = useQuery({
-    queryKey: ["analytics-trends"],
-    queryFn: () => analyticsApi.trends().then((r) => r.data),
   });
 
   if (isLoading || !overview) {
@@ -61,18 +49,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard label="Total" value={overview.total_complaints} icon={BarChart3} />
-        <StatCard label="Pending" value={overview.pending} icon={AlertTriangle} iconClassName="bg-amber-50 [&>svg]:text-amber-600" />
         <StatCard label="In progress" value={overview.in_progress} icon={Clock} iconClassName="bg-orange-50 [&>svg]:text-orange-600" />
         <StatCard label="Resolved" value={`${overview.resolution_rate}%`} icon={CheckCircle} iconClassName="bg-emerald-50 [&>svg]:text-emerald-600" />
       </div>
-
-      <DashboardCharts
-        overview={overview}
-        departmentData={isSystemAdmin ? deptData : undefined}
-        trendData={trends}
-      />
     </div>
   );
 }

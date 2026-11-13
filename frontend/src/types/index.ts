@@ -28,6 +28,7 @@ export type ComplaintStatus =
   | "verified"
   | "assigned"
   | "work_started"
+  | "work_completed"
   | "resolved"
   | "feedback_received"
   | "pending"
@@ -56,6 +57,7 @@ export interface Complaint {
   title: string;
   description: string;
   images: { url: string; public_id: string }[];
+  field_completion_images?: { url: string; public_id: string }[];
   location: { coordinates: number[]; address: string };
   status: ComplaintStatus;
   priority: Priority;
@@ -77,7 +79,6 @@ export interface Complaint {
 
 export interface AnalyticsOverview {
   total_complaints: number;
-  pending: number;
   in_progress: number;
   resolved: number;
   avg_resolution_hours: number;

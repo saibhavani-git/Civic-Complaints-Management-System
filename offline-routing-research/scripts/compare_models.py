@@ -19,6 +19,7 @@ from sklearn.svm import LinearSVC
 
 from algorithms import keyword_router  # noqa: E402
 from algorithms.embedding_router import EmbeddingCentroidRouter, EmbeddingKNNRouter  # noqa: E402
+from algorithms.rf_router import TfidfRandomForestRouter  # noqa: E402
 from algorithms.xgb_router import TfidfXGBRouter  # noqa: E402
 from scripts._paths import ARTIFACTS_DIR, DATA_DIR  # noqa: E402
 
@@ -62,6 +63,9 @@ def main() -> None:
     xgb_model = TfidfXGBRouter()
     xgb_model.fit(X_train, y_train)
 
+    rf_model = TfidfRandomForestRouter()
+    rf_model.fit(X_train, y_train)
+
     print("Training embedding routers (downloads MiniLM on first run)...")
     emb_centroid = EmbeddingCentroidRouter()
     emb_centroid.fit(X_train, y_train)
@@ -76,12 +80,18 @@ def main() -> None:
         "tfidf_linear_svc": _train_pipeline(LinearSVC(class_weight="balanced", random_state=42)),
         "tfidf_multinomial_nb": _train_pipeline(MultinomialNB()),
         "tfidf_xgboost": xgb_model,
+        "tfidf_random_forest": rf_model,
         "embedding_centroid_minilm": emb_centroid,
         "embedding_knn5_minilm": emb_knn,
     }
 
     for name, pipe in candidates.items():
-        if pipe is not None and name not in ("tfidf_xgboost", "embedding_centroid_minilm", "embedding_knn5_minilm"):
+        if pipe is not None and name not in (
+            "tfidf_xgboost",
+            "tfidf_random_forest",
+            "embedding_centroid_minilm",
+            "embedding_knn5_minilm",
+        ):
             pipe.fit(X_train, y_train)
 
     report: dict = {
@@ -102,7 +112,7 @@ def main() -> None:
                 report["models"][name] = {}
             if pipe is None:
                 preds = [keyword_router.predict(t).department_code for t in texts]
-            elif name == "tfidf_xgboost":
+            elif name in ("tfidf_xgboost", "tfidf_random_forest"):
                 preds = pipe.predict(texts)
             elif name.startswith("embedding_"):
                 preds = pipe.predict_batch(texts)
@@ -118,15 +128,15 @@ def main() -> None:
     print(f"\nSaved -> {out}")
 
     print("\n=== Accuracy table (department routing) ===")
-    print(f"{'Model':<32} {'Train':>8} {'Val':>8} {'Holdout':>8}")
-    print("-" * 58)
+    print(f"{'Model':<34} {'Train':>8} {'Val':>8} {'Holdout':>8}")
+    print("-" * 60)
     for name in candidates:
         m = report["models"][name]
         tr = m.get("train", {})
         va = m.get("validation", {})
         ho = m.get("holdout", {})
         print(
-            f"{name:<32} "
+            f"{name:<34} "
             f"{tr.get('accuracy', 0)*100:7.2f}% "
             f"{va.get('accuracy', 0)*100:7.2f}% "
             f"{ho.get('accuracy', 0)*100:7.2f}%"

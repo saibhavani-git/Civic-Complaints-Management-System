@@ -1,0 +1,9 @@
+{
+  "name": "humanizr",
+  "private": true,
+  "description": "Humanizr — local dev launcher (Redis, API, queue, frontend)",
+  "scripts": {
+    "start": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/start-local.ps1",
+    "dev": "npm run start"
+  }
+}

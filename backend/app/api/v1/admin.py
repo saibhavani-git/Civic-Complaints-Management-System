@@ -7,6 +7,7 @@ from app.core.rbac import Role, get_current_user, require_roles
 from app.db.database import get_database
 from app.schemas.common import DepartmentCreate, DepartmentResponse
 from app.schemas.user import AdminUserCreate, UserResponse
+from app.services.analytics_service import get_person_case_report
 from app.services.auth_service import create_staff_user
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -37,6 +38,14 @@ async def list_users(_=Depends(require_roles(Role.ADMIN))):
             "service_area": (doc.get("service_area") or "").strip() or None,
         })
     return users
+
+
+@router.get("/users/{user_id}/cases")
+async def user_cases(user_id: str, _=Depends(require_roles(Role.ADMIN))):
+    report = await get_person_case_report(user_id)
+    if report is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
+    return report
 
 
 @router.post("/users", response_model=UserResponse, status_code=201)

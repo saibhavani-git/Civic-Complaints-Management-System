@@ -1,6 +1,8 @@
 # API Reference
 
-Base URL: `http://localhost:8000/api/v1`
+Base URL (local `npm start`): `http://127.0.0.1:8002/api/v1`
+
+Docker Compose publishes the same API on port **8000**.
 
 All authenticated endpoints require: `Authorization: Bearer <access_token>`
 
@@ -59,7 +61,8 @@ All authenticated endpoints require: `Authorization: Bearer <access_token>`
 | GET | `/complaints` | All | List complaints (filtered by role) |
 | GET | `/complaints/{id}` | All | Get complaint details |
 | PATCH | `/complaints/{id}/status` | Officer/Admin | Update status |
-| POST | `/complaints/{id}/resolve` | Officer | Mark resolved with notes + proof |
+| POST | `/complaints/{id}/field-photos` | Officer | Upload completion photos (multipart `images`) |
+| POST | `/complaints/{id}/resolve` | Dept admin / Admin | Mark finished after officer photos |
 | GET | `/complaints/{id}/timeline` | All | Status history |
 
 ### POST /complaints
@@ -125,6 +128,7 @@ All authenticated endpoints require: `Authorization: Bearer <access_token>`
 | Method | Endpoint | Role | Description |
 |--------|----------|------|-------------|
 | GET | `/admin/users` | Admin | List all users |
+| GET | `/admin/users/{id}/cases` | Admin | One person's solved, current, and critical cases |
 | POST | `/admin/users` | Admin | Create officer/admin |
 | PATCH | `/admin/users/{id}` | Admin | Update user |
 | DELETE | `/admin/users/{id}` | Admin | Deactivate user |
@@ -152,8 +156,7 @@ All authenticated endpoints require: `Authorization: Bearer <access_token>`
 ```json
 {
   "total_complaints": 1247,
-  "pending": 89,
-  "in_progress": 156,
+  "in_progress": 245,
   "resolved": 982,
   "avg_resolution_hours": 48.5,
   "priority_distribution": {

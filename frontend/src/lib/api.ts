@@ -78,6 +78,8 @@ export const complaintsApi = {
     api.patch(`/complaints/${id}/status`, { status: data.status, note: data.note }),
   resolve: (id: string, notes: string) =>
     api.post(`/complaints/${id}/resolve`, { notes }),
+  uploadFieldPhotos: (id: string, formData: FormData) =>
+    api.post(`/complaints/${id}/field-photos`, formData, { timeout: 90000 }),
   submitFeedback: (id: string, data: { rating: number; comment?: string }) =>
     api.post(`/complaints/${id}/feedback`, data),
   nearby: (id: string, radius?: number) =>
@@ -125,6 +127,7 @@ export const notificationsApi = {
 
 export const adminApi = {
   listUsers: () => api.get("/admin/users"),
+  userCases: (userId: string) => api.get(`/admin/users/${userId}/cases`),
   createUser: (data: Record<string, unknown>) => api.post("/admin/users", data),
   listDepartments: () => api.get("/admin/departments"),
   createDepartment: (data: Record<string, unknown>) => api.post("/admin/departments", data),
