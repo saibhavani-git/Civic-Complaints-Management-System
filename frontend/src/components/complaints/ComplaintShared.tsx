@@ -6,7 +6,6 @@ import type { Complaint } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 import { normalizeRole } from "@/lib/roles";
 import { sanitizeTimelineNote } from "@/lib/timelineNotes";
-import { publicStatus } from "@/lib/complaintStatus";
 import {
   type ComplaintFilterRole,
   showAwaitingAssignmentFilter,
@@ -19,7 +18,7 @@ function timelineEntriesForDisplay(history: Complaint["status_history"]) {
   const out: typeof chronological = [];
   for (const entry of chronological) {
     const prev = out[out.length - 1];
-    if (prev && publicStatus(prev.status) === publicStatus(entry.status)) continue;
+    if (prev && prev.status === entry.status) continue;
     out.push(entry);
   }
   return out;
@@ -48,7 +47,7 @@ export function ComplaintTimeline({
           </div>
           <div className="flex-1 pb-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <StatusBadge status={entry.status} />
+              <StatusBadge status={entry.status} detailed />
               <span className="text-xs text-muted-foreground">{formatDate(entry.changed_at)}</span>
             </div>
             {showNotes && (() => {

@@ -1,13 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { publicStatus, TRACKING_STEPS, trackingStepIndex } from "@/lib/complaintStatus";
+import { TRACKING_STEPS, trackingStepIndex } from "@/lib/complaintStatus";
 import { Check } from "lucide-react";
 
 export function ComplaintProgressTracker({ status }: { status: string }) {
-  if (publicStatus(status) === "rejected") {
-    return <p className="text-sm font-medium text-red-700">Rejected</p>;
-  }
   const current = trackingStepIndex(status);
   const allDone = current >= TRACKING_STEPS.length;
 

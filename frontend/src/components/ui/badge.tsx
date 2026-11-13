@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { priorityLabel, publicStatus, statusLabel } from "@/lib/complaintStatus";
+import { priorityLabel, publicStatus, statusLabel, stepLabel } from "@/lib/complaintStatus";
 
 type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "muted";
 
@@ -37,10 +37,31 @@ export function Badge({ children, variant = "default", className }: BadgeProps) 
 export function StatusBadge({
   status,
   unsupportedDepartment,
+  detailed = false,
 }: {
   status: string;
   unsupportedDepartment?: boolean;
+  detailed?: boolean;
 }) {
+  if (detailed) {
+    const map: Record<string, BadgeVariant> = {
+      submitted: "muted",
+      pending: "warning",
+      ai_processing: "info",
+      ai_processed: "info",
+      routed_to_department: "info",
+      verified: "info",
+      assigned: "info",
+      work_started: "warning",
+      in_progress: "warning",
+      work_completed: "success",
+      resolved: "success",
+      feedback_received: "success",
+      closed: "muted",
+      rejected: "danger",
+    };
+    return <Badge variant={map[status] || "muted"}>{stepLabel(status)}</Badge>;
+  }
   const group = publicStatus(status);
   const map: Record<string, BadgeVariant> = {
     submitted: "muted",
